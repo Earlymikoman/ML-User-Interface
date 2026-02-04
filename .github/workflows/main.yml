@@ -1,0 +1,41 @@
+name: Build and Push Docker Image For Hello, World
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v2
+
+    - name: Set up .NET Core
+      uses: actions/setup-dotnet@v3
+      with:
+        dotnet-version: '8.x'
+
+    - name: Restore dependencies
+      run: dotnet restore
+
+    - name: Build the project
+      run: dotnet build --configuration Release --no-restore
+
+    - name: Publish the project
+      run: dotnet publish -c Release
+
+    - name: Build Docker image
+      run: docker build -t earlydigiweb.azurecr.io/azure-file-server:${{ github.sha}} .
+
+    - name: Log in to Azure Container Registry
+      uses: azure/docker-login@v1
+      with:
+        login-server: earlydigiweb.azurecr.io
+        username: ${{ secrets.ACR_USERNAME }}
+        password: ${{ secrets.ACR_PASSWORD }}
+
+    - name: Push Docker image
+      run: docker push earlydigiweb.azurecr.io/azure-file-server:${{ github.sha}}
