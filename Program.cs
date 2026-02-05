@@ -53,7 +53,9 @@ class Program
         FileServerHandlers instance = new FileServerHandlers(configuration);
 
         WebApplication app = builder.Build();
- 
+
+        app.MapGet("/", instance.DefaultDelegate);
+
         app.MapGet("/healthcheck", instance.HealthCheckDelegate);
         app.MapGet("/downloadfile", instance.DownloadFileDelegate);
         app.MapGet("/listfiles", instance.ListFilesDelegate);

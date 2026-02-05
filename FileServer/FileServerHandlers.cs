@@ -47,6 +47,33 @@ public class FileServerHandlers
         return items[0];
     }
 
+    public async Task DefaultDelegate(HttpContext context)
+    {
+        // "using" is a C# system to ensure that the object is disposed of properly
+        // when the block is exited. In this case, it will call the Dispose method
+        using(var log = _logger.StartMethod(nameof(DefaultDelegate), context))
+        {
+            try
+            {
+                // Generally, a 200 OK is returned if the service is alive
+                // and that is all that the load balancer needs, but a
+                // text message can be useful for humans.
+                // However, in some cases, the LB will be able to process more
+                // health information to know how to react to your service, so
+                // don't be surprised if you see code with more involved health 
+                // checks.
+                await context.Response.WriteAsync("Default");
+            }
+            catch(Exception e)
+            {
+                // While you can just throw the exception back to the web server,
+                // it is not recommended. It is better to catch the exception and
+                // log it, then return a 500 Internal Server Error to the caller yourself.
+                log.HandleException(e);
+            }
+        }
+    }
+
     // Health Checks (aka ping) methods are handy to have on your service
     // They allow you to report that your are alive and return any other
     // information that is useful. These are often used by load balancers
