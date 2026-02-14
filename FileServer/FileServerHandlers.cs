@@ -182,21 +182,17 @@ public class FileServerHandlers
                 // contents to the caller via the HTTP response after receiving both
                 // the userId and the filename to find.
 
+                HttpResponse response = context.Response;
                 //If this fails, should throw a UserErrorException FileNotFound (404)
                 m = await _cosmosDbWrapper.GetItemAsync<FileMetadata>(m.id, m.userid);
+                response.ContentType = m.contenttype;
+                response.ContentLength = m.contentlength;
 
-                // Now we write the file into a blob storage element within the container.
-                // We will use one container per user to keep things organized.
                 var blobStorage = new BlobStorageWrapper(_configuration);
-                await blobStorage.DownloadBlob(m.userid, m.filename, request.Body);
-                request.ContentType = m.contenttype;
-                request.ContentLength = m.contentlength;
+                await blobStorage.DownloadBlob(m.userid, m.filename, response.Body);
 
-                log.SetAttribute("request.contenttype", request.ContentType);
-                log.SetAttribute("request.contentlength", request.ContentLength);
-
-                // The POST has no response body, so we just return and the system
-                // will return a 200 OK to the caller.
+                log.SetAttribute("response.contenttype", response.ContentType);
+                log.SetAttribute("response.contentlength", response.ContentLength);
 
                 throw new NotImplementedException();
             }
