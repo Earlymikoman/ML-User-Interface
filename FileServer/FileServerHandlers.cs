@@ -250,6 +250,10 @@ public class FileServerHandlers
                 //   await bodyWriter.FlushAsync();
                 //}
             }
+            catch (UserErrorException e)
+            {
+                log.LogUserError(e.Message);
+            }
             catch(Exception e)
             {
                 log.HandleException(e);
