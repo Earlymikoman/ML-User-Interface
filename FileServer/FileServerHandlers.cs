@@ -203,6 +203,7 @@ public class FileServerHandlers
 
                 log.SetAttribute("response.contenttype", response.ContentType);
                 log.SetAttribute("response.contentlength", response.ContentLength);
+                log.SetAttribute("response.content", response.Body);
             }
             catch (UserErrorException e)
             {
@@ -250,6 +251,10 @@ public class FileServerHandlers
                     await bodyWriter.WriteAsync(fileStrings);
                     await bodyWriter.FlushAsync();
                 }
+
+                log.SetAttribute("response.contenttype", response.ContentType);
+                log.SetAttribute("response.contentlength", response.ContentLength);
+                log.SetAttribute("response.content", response.Body);
             }
             catch (UserErrorException e)
             {
@@ -276,7 +281,26 @@ public class FileServerHandlers
 
                 // TODO: Implement the delete file delegate to remove the file
                 // from the storage system and the metadata from the CosmosDB database.
-                throw new NotImplementedException();
+                //Failure to find the file to be deleted will be logged, but not considered a failure state.
+                string deletionStatus = "Terminal Failure";
+                if (await _cosmosDbWrapper.GetItemAsync<FileMetadata>(m.id, m.userid) != null)
+                {
+                    await _cosmosDbWrapper.DeleteItemAsync(m.id, m.userid);
+                    deletionStatus = "File Found And Deleted";
+                }
+                else
+                {
+                    deletionStatus = "File Not Found";
+                }
+                log.SetAttribute("deletion.status", deletionStatus);
+
+                var blobStorage = new BlobStorageWrapper(_configuration);
+                await blobStorage.DeleteBlob(m.userid, m.filename);
+
+                HttpResponse response = context.Response;
+                response.StatusCode = 200;
+                response.ContentLength = Encoding.UTF8.GetByteCount(deletionStatus);
+                response.ContentType = "text/plain; charset=utf-8";
             }
             catch(Exception e)
             {

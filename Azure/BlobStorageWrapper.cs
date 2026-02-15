@@ -65,6 +65,27 @@ public class BlobStorageWrapper
         }
     }
 
+    public async Task DeleteBlob(string containerName, string filename)
+    {
+        if (string.IsNullOrEmpty(containerName))
+        {
+            throw new ArgumentException("Container name cannot be null or empty", nameof(containerName));
+        }
+        if (string.IsNullOrEmpty(filename))
+        {
+            throw new ArgumentException("Filename cannot be null or empty", nameof(filename));
+        }
+
+        using (var log = _logger.StartMethod(nameof(DeleteBlob)))
+        {
+            log.SetAttribute("containerName", containerName);
+            log.SetAttribute("filename", filename);
+
+            //Delete the blob if it exists. Nonexistence is not considered a failure state.
+            await _client.GetBlobContainerClient(containerName).DeleteBlobIfExistsAsync(filename);
+        }
+    }
+
     public async Task DownloadBlob(string containerName, string filename, Stream uploadStream)
     {
         if (string.IsNullOrEmpty(containerName))
