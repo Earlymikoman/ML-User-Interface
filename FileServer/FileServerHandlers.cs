@@ -128,7 +128,7 @@ public class FileServerHandlers
                 m.contenttype = fileContent.ContentType;
                 m.contentlength = fileContent.Length; 
 
-                Path.ChangeExtension(Path.GetFileNameWithoutExtension(m.filename), Path.GetExtension(m.filename).ToLowerInvariant());               
+                m.filename = Path.ChangeExtension(Path.GetFileNameWithoutExtension(m.filename), Path.GetExtension(m.filename).ToLowerInvariant());               
 
                 log.SetAttribute("request.filename", m.filename);
                 log.SetAttribute("request.contenttype", m.contenttype);
@@ -180,7 +180,7 @@ public class FileServerHandlers
                 m.userid = GetParameterFromList("userid", request, log);
                 m.filename = GetParameterFromList("filename", request, log);
 
-                Path.ChangeExtension(Path.GetFileNameWithoutExtension(m.filename), Path.GetExtension(m.filename).ToLowerInvariant());
+                m.filename = Path.ChangeExtension(Path.GetFileNameWithoutExtension(m.filename), Path.GetExtension(m.filename).ToLowerInvariant());
 
                 log.SetAttribute("request.filename", m.filename);
 
@@ -284,7 +284,7 @@ public class FileServerHandlers
                 m.userid = GetParameterFromList("userid", request, log);
                 m.filename = GetParameterFromList("filename", request, log);
 
-                Path.ChangeExtension(Path.GetFileNameWithoutExtension(m.filename), Path.GetExtension(m.filename).ToLowerInvariant());
+                m.filename = Path.ChangeExtension(Path.GetFileNameWithoutExtension(m.filename), Path.GetExtension(m.filename).ToLowerInvariant());
 
                 // TODO: Implement the delete file delegate to remove the file
                 // from the storage system and the metadata from the CosmosDB database.
