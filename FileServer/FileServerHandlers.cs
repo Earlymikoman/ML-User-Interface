@@ -126,11 +126,13 @@ public class FileServerHandlers
                 m.userid = GetParameterFromList("userid", request, log);
                 m.filename = fileContent.FileName;
                 m.contenttype = fileContent.ContentType;
-                m.contentlength = fileContent.Length;                
+                m.contentlength = fileContent.Length; 
 
-                log.SetAttribute("request.filename", fileContent.FileName);
-                log.SetAttribute("request.contenttype", fileContent.ContentType);
-                log.SetAttribute("request.contentlength", fileContent.Length);
+                Path.ChangeExtension(Path.GetFileNameWithoutExtension(m.filename), Path.GetExtension(m.filename).ToLowerInvariant());               
+
+                log.SetAttribute("request.filename", m.filename);
+                log.SetAttribute("request.contenttype", m.contenttype);
+                log.SetAttribute("request.contentlength", m.contentlength);
 
                 // First step is we will write the metadata to CosmosDB
                 // Here we are using Type mapping to convert our data structure
@@ -177,6 +179,8 @@ public class FileServerHandlers
                 FileMetadata m = new FileMetadata();
                 m.userid = GetParameterFromList("userid", request, log);
                 m.filename = GetParameterFromList("filename", request, log);
+
+                Path.ChangeExtension(Path.GetFileNameWithoutExtension(m.filename), Path.GetExtension(m.filename).ToLowerInvariant());
 
                 log.SetAttribute("request.filename", m.filename);
 
@@ -279,6 +283,8 @@ public class FileServerHandlers
                 FileMetadata m = new FileMetadata();
                 m.userid = GetParameterFromList("userid", request, log);
                 m.filename = GetParameterFromList("filename", request, log);
+
+                Path.ChangeExtension(Path.GetFileNameWithoutExtension(m.filename), Path.GetExtension(m.filename).ToLowerInvariant());
 
                 // TODO: Implement the delete file delegate to remove the file
                 // from the storage system and the metadata from the CosmosDB database.
