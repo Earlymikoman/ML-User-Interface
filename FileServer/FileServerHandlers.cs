@@ -225,6 +225,8 @@ public class FileServerHandlers
 
                 FileMetadata m = new FileMetadata();
                 m.userid = GetParameterFromList("userid", request, log);
+                
+                m.filename = GetParameterFromList("filename", request, log);
 
                 // TODO: Implement the list files delegate to return a list of files
                 // that are associated with the userId provided in the HTTP request.
