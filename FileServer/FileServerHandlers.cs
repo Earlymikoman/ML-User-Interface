@@ -14,8 +14,10 @@ public class FileServerHandlers
     private readonly IConfiguration _configuration;
     private readonly Logger _logger;
     private readonly CosmosDbWrapper _cosmosDbWrapper;
+    private readonly IHttpClientFactory _httpClientFactory;
 
-    public FileServerHandlers(IConfiguration configuration)
+    //I'm realizing this whole class is magic; something is filling in these parameters, according to Claude.
+    public FileServerHandlers(IConfiguration configuration, IHttpClientFactory httpClientFactory)
     {
         _configuration = configuration;
         if (null == _configuration)
@@ -27,6 +29,7 @@ public class FileServerHandlers
         _logger = new Logger(serviceName);
 
         _cosmosDbWrapper = new CosmosDbWrapper(configuration);
+        _httpClientFactory = httpClientFactory;
     }
 
     private static string GetParameterFromList(string parameterName, HttpRequest request, MethodLogger log)
@@ -185,6 +188,20 @@ public class FileServerHandlers
                 m.filename = Path.ChangeExtension(Path.GetFileNameWithoutExtension(m.filename), Path.GetExtension(m.filename).ToLowerInvariant());
 
                 log.SetAttribute("request.filename", m.filename);
+
+
+
+                var client = _httpClientFactory.CreateClient();
+                var promptResponse = await client.GetAsync(_configuration["AzureFileServer:ConnectionStrings:PromptHandlerEndpoint"] + "");
+
+                if (!promptResponse.IsSuccessStatusCode)
+                {
+                    throw new UserErrorException();
+                }
+
+                var content = await promptResponse.Content.ReadAsStringAsync();
+
+
 
                 // TODO: Implement the download file delegate to return the file
                 // contents to the caller via the HTTP response after receiving both

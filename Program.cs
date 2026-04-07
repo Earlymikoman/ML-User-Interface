@@ -50,6 +50,8 @@ class Program
             .AddJsonConsoleExporter(); // Output log lines to the console
         });
 
+        builder.Services.AddHttpClient();
+
         FileServerHandlers instance = new FileServerHandlers(configuration);
 
         WebApplication app = builder.Build();
