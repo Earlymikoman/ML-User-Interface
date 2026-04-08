@@ -60,9 +60,9 @@ class Program
 
         app.MapGet("/healthcheck", instance.HealthCheckDelegate);
         app.MapGet("/acquireprompt", instance.AcquirePromptDelegate);
-        app.MapGet("/writepromptresponse", instance.WritePromptResponseDelegate);
-        app.MapGet("/listpromptresponses", instance.ListPromptResponsesDelegate);
-        app.MapGet("/deletepromptresponse", instance.DeletePromptResponseDelegate);
+        //app.MapGet("/writepromptresponse", instance.WritePromptResponseDelegate);
+        //app.MapGet("/listpromptresponses", instance.ListPromptResponsesDelegate);
+        //app.MapGet("/deletepromptresponse", instance.DeletePromptResponseDelegate);
 
         app.Run();
     }

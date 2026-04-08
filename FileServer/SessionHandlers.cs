@@ -112,65 +112,65 @@ public class Sessions
     }
 
     //Incomplete
-    public async Task WritePromptResponseDelegate(HttpContext context)
-    {
-        using(var log = _logger.StartMethod(nameof(WritePromptResponseDelegate), context))
-        {
-            try
-            {
-                HttpRequest request = context.Request;
+    // public async Task WritePromptResponseDelegate(HttpContext context)
+    // {
+    //     using(var log = _logger.StartMethod(nameof(WritePromptResponseDelegate), context))
+    //     {
+    //         try
+    //         {
+    //             HttpRequest request = context.Request;
 
-                IFormFile fileContent = context.Request.Form.Files.FirstOrDefault();
-                if (fileContent == null)
-                {
-                    throw new UserErrorException("No file content found");
-                }
+    //             IFormFile fileContent = context.Request.Form.Files.FirstOrDefault();
+    //             if (fileContent == null)
+    //             {
+    //                 throw new UserErrorException("No file content found");
+    //             }
 
-                UserMetadata m = new UserMetadata();
-                m.userid = GetParameterFromList("userid", request, log);
-                m.filename = fileContent.FileName;
-                m.contenttype = fileContent.ContentType;
-                m.contentlength = fileContent.Length; 
+    //             UserMetadata m = new UserMetadata();
+    //             m.userid = GetParameterFromList("userid", request, log);
+    //             m.filename = fileContent.FileName;
+    //             m.contenttype = fileContent.ContentType;
+    //             m.contentlength = fileContent.Length; 
 
-                m.filename = Path.ChangeExtension(Path.GetFileNameWithoutExtension(m.filename), Path.GetExtension(m.filename).ToLowerInvariant());               
+    //             m.filename = Path.ChangeExtension(Path.GetFileNameWithoutExtension(m.filename), Path.GetExtension(m.filename).ToLowerInvariant());               
 
-                log.SetAttribute("request.filename", m.filename);
-                log.SetAttribute("request.contenttype", m.contenttype);
-                log.SetAttribute("request.contentlength", m.contentlength);
+    //             log.SetAttribute("request.filename", m.filename);
+    //             log.SetAttribute("request.contenttype", m.contenttype);
+    //             log.SetAttribute("request.contentlength", m.contentlength);
 
-                // First step is we will write the metadata to CosmosDB
-                // Here we are using Type mapping to convert our data structure
-                // to a JSON document that can be stored in CosmosDB.
-                if (await _cosmosDbWrapper.GetItemAsync<UserMetadata>(m.id, m.userid) != null)
-                {
-                    await _cosmosDbWrapper.UpdateItemAsync(m.id, m.userid, m);
-                }
-                else
-                {
-                    await _cosmosDbWrapper.AddItemAsync(m, m.userid);
-                }
+    //             // First step is we will write the metadata to CosmosDB
+    //             // Here we are using Type mapping to convert our data structure
+    //             // to a JSON document that can be stored in CosmosDB.
+    //             if (await _cosmosDbWrapper.GetItemAsync<UserMetadata>(m.id, m.userid) != null)
+    //             {
+    //                 await _cosmosDbWrapper.UpdateItemAsync(m.id, m.userid, m);
+    //             }
+    //             else
+    //             {
+    //                 await _cosmosDbWrapper.AddItemAsync(m, m.userid);
+    //             }
 
-                // Now we write the file into a blob storage element within the container.
-                // We will use one container per user to keep things organized.
-                var blobStorage = new BlobStorageWrapper(_configuration);
-                using (var streamReader = new StreamReader(fileContent.OpenReadStream()))
-                {
-                    await blobStorage.WriteBlob(m.userid, m.filename, streamReader.BaseStream);
-                }
+    //             // Now we write the file into a blob storage element within the container.
+    //             // We will use one container per user to keep things organized.
+    //             var blobStorage = new BlobStorageWrapper(_configuration);
+    //             using (var streamReader = new StreamReader(fileContent.OpenReadStream()))
+    //             {
+    //                 await blobStorage.WriteBlob(m.userid, m.filename, streamReader.BaseStream);
+    //             }
 
-                // The POST has no response body, so we just return and the system
-                // will return a 200 OK to the caller.
-            }
-            catch (UserErrorException e)
-            {
-                log.LogUserError(e.Message);
-            }
-            catch(Exception e)
-            {
-                log.HandleException(e);
-            }
-        }
-    }
+    //             // The POST has no response body, so we just return and the system
+    //             // will return a 200 OK to the caller.
+    //         }
+    //         catch (UserErrorException e)
+    //         {
+    //             log.LogUserError(e.Message);
+    //         }
+    //         catch(Exception e)
+    //         {
+    //             log.HandleException(e);
+    //         }
+    //     }
+    // }
 
     //Incomplete
     public async Task AcquirePromptDelegate(HttpContext context)
@@ -269,107 +269,107 @@ public class Sessions
     }
 
     //Incomplete
-    public async Task ListPromptResponsesDelegate(HttpContext context)
-    {
-        using(var log = _logger.StartMethod(nameof(ListPromptResponsesDelegate), context))
-        {
-            try
-            {
-                HttpRequest request = context.Request;
+    // public async Task ListPromptResponsesDelegate(HttpContext context)
+    // {
+    //     using(var log = _logger.StartMethod(nameof(ListPromptResponsesDelegate), context))
+    //     {
+    //         try
+    //         {
+    //             HttpRequest request = context.Request;
 
-                UserMetadata m = new UserMetadata();
-                m.userid = GetParameterFromList("userid", request, log);
+    //             UserMetadata m = new UserMetadata();
+    //             m.userid = GetParameterFromList("userid", request, log);
 
-                // TODO: Implement the list files delegate to return a list of files
-                // that are associated with the userId provided in the HTTP request.
-                HttpResponse response = context.Response;
-                string query = $"SELECT * FROM c WHERE c.userid = \"{m.userid}\"";
-                IEnumerable<UserMetadata> metadatas = await _cosmosDbWrapper.GetItemsAsync<UserMetadata>(query);
-                if (metadatas == null)
-                {
-                    throw new UserErrorException();
-                }
+    //             // TODO: Implement the list files delegate to return a list of files
+    //             // that are associated with the userId provided in the HTTP request.
+    //             HttpResponse response = context.Response;
+    //             string query = $"SELECT * FROM c WHERE c.userid = \"{m.userid}\"";
+    //             IEnumerable<UserMetadata> metadatas = await _cosmosDbWrapper.GetItemsAsync<UserMetadata>(query);
+    //             if (metadatas == null)
+    //             {
+    //                 throw new UserErrorException();
+    //             }
                 
-                string fileStrings = metadatas.Count() + " Files Found:\n";
-                foreach (UserMetadata metadata in metadatas)
-                {
-                    fileStrings += "\t" + metadata.ToString() + "\n";
-                }
-                response.StatusCode = 200;
-                response.ContentLength = Encoding.UTF8.GetByteCount(fileStrings);
-                response.ContentType = "text/plain; charset=utf-8";
+    //             string fileStrings = metadatas.Count() + " Files Found:\n";
+    //             foreach (UserMetadata metadata in metadatas)
+    //             {
+    //                 fileStrings += "\t" + metadata.ToString() + "\n";
+    //             }
+    //             response.StatusCode = 200;
+    //             response.ContentLength = Encoding.UTF8.GetByteCount(fileStrings);
+    //             response.ContentType = "text/plain; charset=utf-8";
 
-                await using (var bodyWriter = new StreamWriter(response.Body, leaveOpen: true))
-                {
-                    await bodyWriter.WriteAsync(fileStrings);
-                    await bodyWriter.FlushAsync();
-                }
+    //             await using (var bodyWriter = new StreamWriter(response.Body, leaveOpen: true))
+    //             {
+    //                 await bodyWriter.WriteAsync(fileStrings);
+    //                 await bodyWriter.FlushAsync();
+    //             }
 
-                log.SetAttribute("response.contenttype", response.ContentType);
-                log.SetAttribute("response.contentlength", response.ContentLength);
-                log.SetAttribute("response.content", response.Body);
-            }
-            catch (UserErrorException e)
-            {
-                log.LogUserError(e.Message);
-            }
-            catch(Exception e)
-            {
-                log.HandleException(e);
-            }
-        }
-    }
+    //             log.SetAttribute("response.contenttype", response.ContentType);
+    //             log.SetAttribute("response.contentlength", response.ContentLength);
+    //             log.SetAttribute("response.content", response.Body);
+    //         }
+    //         catch (UserErrorException e)
+    //         {
+    //             log.LogUserError(e.Message);
+    //         }
+    //         catch(Exception e)
+    //         {
+    //             log.HandleException(e);
+    //         }
+    //     }
+    // }
 
     //Incomplete
-    public async Task DeletePromptResponseDelegate(HttpContext context)
-    {
-        using(var log = _logger.StartMethod(nameof(DeletePromptResponseDelegate), context))
-        {
-            try
-            {
-                HttpRequest request = context.Request;
+    // public async Task DeletePromptResponseDelegate(HttpContext context)
+    // {
+    //     using(var log = _logger.StartMethod(nameof(DeletePromptResponseDelegate), context))
+    //     {
+    //         try
+    //         {
+    //             HttpRequest request = context.Request;
 
-                UserMetadata m = new UserMetadata();
-                m.userid = GetParameterFromList("userid", request, log);
-                m.filename = GetParameterFromList("filename", request, log);
+    //             UserMetadata m = new UserMetadata();
+    //             m.userid = GetParameterFromList("userid", request, log);
+    //             m.filename = GetParameterFromList("filename", request, log);
 
-                m.filename = Path.ChangeExtension(Path.GetFileNameWithoutExtension(m.filename), Path.GetExtension(m.filename).ToLowerInvariant());
+    //             m.filename = Path.ChangeExtension(Path.GetFileNameWithoutExtension(m.filename), Path.GetExtension(m.filename).ToLowerInvariant());
 
-                // TODO: Implement the delete file delegate to remove the file
-                // from the storage system and the metadata from the CosmosDB database.
-                //Failure to find the file to be deleted will be logged, but not considered a failure state.
-                //I don't know what would cause "Terminal Failure" to show, but I know it would indeed be terminal, so that's what the default value gets to be.
-                string deletionStatus = "Terminal Failure";
-                if (await _cosmosDbWrapper.GetItemAsync<UserMetadata>(m.id, m.userid) != null)
-                {
-                    await _cosmosDbWrapper.DeleteItemAsync(m.id, m.userid);
-                    deletionStatus = "File Found And Deleted";
-                }
-                else
-                {
-                    deletionStatus = "File Not Found";
+    //             // TODO: Implement the delete file delegate to remove the file
+    //             // from the storage system and the metadata from the CosmosDB database.
+    //             //Failure to find the file to be deleted will be logged, but not considered a failure state.
+    //             //I don't know what would cause "Terminal Failure" to show, but I know it would indeed be terminal, so that's what the default value gets to be.
+    //             string deletionStatus = "Terminal Failure";
+    //             if (await _cosmosDbWrapper.GetItemAsync<UserMetadata>(m.id, m.userid) != null)
+    //             {
+    //                 await _cosmosDbWrapper.DeleteItemAsync(m.id, m.userid);
+    //                 deletionStatus = "File Found And Deleted";
+    //             }
+    //             else
+    //             {
+    //                 deletionStatus = "File Not Found";
                     
-                }
-                log.SetAttribute("deletion.status", deletionStatus);
+    //             }
+    //             log.SetAttribute("deletion.status", deletionStatus);
 
-                var blobStorage = new BlobStorageWrapper(_configuration);
-                await blobStorage.DeleteBlob(m.userid, m.filename);
+    //             var blobStorage = new BlobStorageWrapper(_configuration);
+    //             await blobStorage.DeleteBlob(m.userid, m.filename);
 
-                HttpResponse response = context.Response;
-                response.StatusCode = 200;
-                response.ContentLength = Encoding.UTF8.GetByteCount(deletionStatus + ": " + m.filename);
-                response.ContentType = "text/plain; charset=utf-8";
+    //             HttpResponse response = context.Response;
+    //             response.StatusCode = 200;
+    //             response.ContentLength = Encoding.UTF8.GetByteCount(deletionStatus + ": " + m.filename);
+    //             response.ContentType = "text/plain; charset=utf-8";
 
-                await using (var bodyWriter = new StreamWriter(response.Body, leaveOpen: true))
-                {
-                    await bodyWriter.WriteAsync(deletionStatus + ": " + m.filename);
-                    await bodyWriter.FlushAsync();
-                }
-            }
-            catch(Exception e)
-            {
-                log.HandleException(e);
-            }
-        }
-    }
+    //             await using (var bodyWriter = new StreamWriter(response.Body, leaveOpen: true))
+    //             {
+    //                 await bodyWriter.WriteAsync(deletionStatus + ": " + m.filename);
+    //                 await bodyWriter.FlushAsync();
+    //             }
+    //         }
+    //         catch(Exception e)
+    //         {
+    //             log.HandleException(e);
+    //         }
+    //     }
+    // }
 }
