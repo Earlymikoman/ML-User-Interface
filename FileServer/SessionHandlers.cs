@@ -119,12 +119,6 @@ public class Sessions
             {
                 HttpRequest request = context.Request;
 
-                IFormFile fileContent = context.Request.Form.Files.FirstOrDefault();
-                if (fileContent == null)
-                {
-                    throw new UserErrorException("No file content found");
-                }
-
                 UserMetadata m = new UserMetadata();
                 m.userid = GetParameterFromList("userid", request, log);
                 m.prompttype = GetParameterFromList("prompttype", request, log);
