@@ -51,10 +51,11 @@ class Program
         });
 
         builder.Services.AddHttpClient();
-
-        Sessions instance = new Sessions(configuration);
+        builder.Services.AddSingleton<Sessions>();
 
         WebApplication app = builder.Build();
+
+        Sessions instance = app.Services.GetRequiredService<Sessions>();
 
         app.MapGet("/", instance.DefaultDelegate);
 
