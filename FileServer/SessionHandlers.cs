@@ -4,6 +4,7 @@ using AzureFileServer.Utils;
 using Microsoft.Extensions.Primitives;
 using System.Reflection.Metadata.Ecma335;
 using System.Text;
+using System.Net.Http.Headers;
 
 namespace AzureFileServer.FileServer;
 
@@ -175,67 +176,67 @@ public class Sessions
     }
 
     //Incomplete
-    // public async Task WritePromptResponseDelegate(HttpContext context)
-    // {
-    //     using(var log = _logger.StartMethod(nameof(WritePromptResponseDelegate), context))
-    //     {
-    //         try
-    //         {
-    //             HttpRequest request = context.Request;
+    public async Task WritePromptResponseDelegate(HttpContext context)
+    {
+        using(var log = _logger.StartMethod(nameof(WritePromptResponseDelegate), context))
+        {
+            try
+            {
+                HttpRequest request = context.Request;
 
-    //             IFormFile fileContent = context.Request.Form.Files.FirstOrDefault();
-    //             if (fileContent == null)
-    //             {
-    //                 throw new UserErrorException("No file content found");
-    //             }
+                IFormFile fileContent = context.Request.Form.Files.FirstOrDefault();
+                if (fileContent == null)
+                {
+                    throw new UserErrorException("No file content found");
+                }
 
-    //             UserMetadata m = new UserMetadata();
-    //             m.userid = GetParameterFromList("userid", request, log);
-    //             m.filename = fileContent.FileName;
-    //             m.contenttype = fileContent.ContentType;
-    //             m.contentlength = fileContent.Length; 
+                UserMetadata m = new UserMetadata();
+                m.userid = GetParameterFromList("userid", request, log);
+                m.prompttype = GetParameterFromList("prompttype", request, log);
+                string sourceprompt = GetParameterFromList("sourceprompt", request, log);
 
-    //             m.filename = Path.ChangeExtension(Path.GetFileNameWithoutExtension(m.filename), Path.GetExtension(m.filename).ToLowerInvariant());               
+                //m.filename = Path.ChangeExtension(Path.GetFileNameWithoutExtension(m.filename), Path.GetExtension(m.filename).ToLowerInvariant());               
 
-    //             log.SetAttribute("request.filename", m.filename);
-    //             log.SetAttribute("request.contenttype", m.contenttype);
-    //             log.SetAttribute("request.contentlength", m.contentlength);
+                string dataUrl = _configuration["AzureFileServer:ConnectionStrings:DataHandlerEndpoint"] + "/uploaddata?userid=" + m.id + "&sourceprompt=" + sourceprompt;
+                log.SetAttribute("request.url", dataUrl);
 
-    //             // First step is we will write the metadata to CosmosDB
-    //             // Here we are using Type mapping to convert our data structure
-    //             // to a JSON document that can be stored in CosmosDB.
-    //             if (await _cosmosDbWrapper.GetItemAsync<UserMetadata>(m.id, m.userid) != null)
-    //             {
-    //                 await _cosmosDbWrapper.UpdateItemAsync(m.id, m.userid, m);
-    //             }
-    //             else
-    //             {
-    //                 await _cosmosDbWrapper.AddItemAsync(m, m.userid);
-    //             }
+                var dataClient = _httpClientFactory.CreateClient();
 
-    //             // Now we write the file into a blob storage element within the container.
-    //             // We will use one container per user to keep things organized.
-    //             var blobStorage = new BlobStorageWrapper(_configuration);
-    //             using (var streamReader = new StreamReader(fileContent.OpenReadStream()))
-    //             {
-    //                 await blobStorage.WriteBlob(m.userid, m.filename, streamReader.BaseStream);
-    //             }
 
-    //             // The POST has no response body, so we just return and the system
-    //             // will return a 200 OK to the caller.
-    //         }
-    //         catch (UserErrorException e)
-    //         {
-    //             log.LogUserError(e.Message);
-    //         }
-    //         catch(Exception e)
-    //         {
-    //             log.HandleException(e);
-    //         }
-    //     }
-    // }
+                //Grok showing me how to attach a file programmatically.
+                using var formContent = new MultipartFormDataContent();
 
-    //Incomplete
+                // Reuse the original file stream directly (no extra MemoryStream or byte[] copy)
+                var fileStreamContent = new StreamContent(fileContent.OpenReadStream());
+                fileStreamContent.Headers.ContentType = MediaTypeHeaderValue.Parse(
+                    fileContent.ContentType ?? "application/octet-stream");
+
+                formContent.Add(fileStreamContent, "file", fileContent.FileName);   // field name = "file"
+
+                var response = await dataClient.PostAsync(dataUrl, formContent);
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    var error = await response.Content.ReadAsStringAsync();
+                    log.SetAttribute("downstream.error", $"{(int)response.StatusCode} {response.ReasonPhrase}");
+                    throw new UserErrorException($"Forward failed: {(int)response.StatusCode}");
+                }
+
+                // The POST has no response body, so we just return and the system
+                // will return a 200 OK to the caller.
+            }
+            catch (UserErrorException e)
+            {
+                log.LogUserError(e.Message);
+            }
+            catch(Exception e)
+            {
+                log.HandleException(e);
+            }
+        }
+    }
+
+    //Complete
     public async Task AcquirePromptDelegate(HttpContext context)
     {
         using(var log = _logger.StartMethod(nameof(AcquirePromptDelegate), context))
