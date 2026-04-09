@@ -63,7 +63,7 @@ class Program
         app.MapGet("/login", instance.LoginDelegate);
         app.MapGet("/getsessiondata", instance.GetSessionDataDelegate);
         app.MapGet("/acquireprompt", instance.AcquirePromptDelegate);
-        //app.MapGet("/writepromptresponse", instance.WritePromptResponseDelegate);
+        app.MapGet("/writepromptresponse", instance.WritePromptResponseDelegate);
         //app.MapGet("/listpromptresponses", instance.ListPromptResponsesDelegate);
         //app.MapGet("/deletepromptresponse", instance.DeletePromptResponseDelegate);
 

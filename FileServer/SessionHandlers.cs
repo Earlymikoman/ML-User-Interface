@@ -193,11 +193,11 @@ public class Sessions
                 UserMetadata m = new UserMetadata();
                 m.userid = GetParameterFromList("userid", request, log);
                 m.prompttype = GetParameterFromList("prompttype", request, log);
-                string sourceprompt = GetParameterFromList("sourceprompt", request, log);
+                string sourceprompt = m.prompttype + "-" + GetParameterFromList("promptname", request, log);
 
                 //m.filename = Path.ChangeExtension(Path.GetFileNameWithoutExtension(m.filename), Path.GetExtension(m.filename).ToLowerInvariant());               
 
-                string dataUrl = _configuration["AzureFileServer:ConnectionStrings:DataHandlerEndpoint"] + "/uploaddata?userid=" + m.id + "&sourceprompt=" + sourceprompt;
+                string dataUrl = _configuration["AzureFileServer:ConnectionStrings:DataHandlerEndpoint"] + "/uploaddata?userid=" + m.userid + "&sourceprompt=" + sourceprompt;
                 log.SetAttribute("request.url", dataUrl);
 
                 var dataClient = _httpClientFactory.CreateClient();
