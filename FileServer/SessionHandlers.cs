@@ -259,6 +259,9 @@ public class Sessions
 
 
 
+                string listUrl = _configuration["AzureFileServer:ConnectionStrings:PromptHandlerEndpoint"] + "/listprompts?prompttype=" + m.prompttype;
+                log.SetAttribute("request.url", listUrl);
+
                 var listClient = _httpClientFactory.CreateClient();
                 var listResponse = await listClient.GetAsync
                 (_configuration["AzureFileServer:ConnectionStrings:PromptHandlerEndpoint"] + "/listprompts?prompttype=" + m.prompttype);
