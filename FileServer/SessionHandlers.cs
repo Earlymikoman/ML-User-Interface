@@ -203,15 +203,29 @@ public class Sessions
                 var dataClient = _httpClientFactory.CreateClient();
 
 
+
                 //Grok showing me how to attach a file programmatically.
                 using var formContent = new MultipartFormDataContent();
 
-                // Reuse the original file stream directly (no extra MemoryStream or byte[] copy)
+                // Forward the file (this matches curl)
                 var fileStreamContent = new StreamContent(fileContent.OpenReadStream());
                 fileStreamContent.Headers.ContentType = MediaTypeHeaderValue.Parse(
-                    fileContent.ContentType ?? "application/octet-stream");
+                    string.IsNullOrWhiteSpace(fileContent.ContentType) 
+                        ? "application/octet-stream" 
+                        : fileContent.ContentType);
 
-                formContent.Add(fileStreamContent, "file", fileContent.FileName);   // field name = "file"
+                formContent.Add(fileStreamContent, "file", fileContent.FileName ?? "prompt.txt");
+
+                // Remove quoted boundary (common fix for 405 when curl works)
+                var boundaryParam = formContent.Headers.ContentType?.Parameters
+                    .FirstOrDefault(p => string.Equals(p.Name, "boundary", StringComparison.OrdinalIgnoreCase));
+
+                if (boundaryParam?.Value != null)
+                {
+                    boundaryParam.Value = boundaryParam.Value.Replace("\"", "");
+                }
+
+
 
                 var response = await dataClient.PostAsync(dataUrl, formContent);
 
