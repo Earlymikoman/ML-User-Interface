@@ -220,7 +220,7 @@ public class Sessions
 
 
 
-                var response = await dataClient.PostAsync(dataUrl, newFileContent);
+                var response = await dataClient.PostAsync(dataUrl, multipartContent);
 
                 if (!response.IsSuccessStatusCode)
                 {
