@@ -135,8 +135,26 @@ public class Sessions
                     await _cosmosDbWrapper.AddItemAsync(m, m.userid);
                 }
 
-                // The POST has no response body, so we just return and the system
-                // will return a 200 OK to the caller.
+
+
+                string responseString = "";
+
+                HttpResponse response = context.Response;
+
+                response.StatusCode = 200;
+                response.ContentLength = Encoding.UTF8.GetByteCount(responseString);
+                response.ContentType = "text/plain; charset=utf-8";
+
+                var cookieOptions = new CookieOptions
+                {
+                    Expires = DateTimeOffset.UtcNow.AddDays(1),   // or .AddHours(1), etc.
+                    HttpOnly = true,                              // Prevents JavaScript access (security)
+                    Secure = true,                                // Only send over HTTPS
+                    IsEssential = true,                           // For GDPR consent (if needed)
+                    SameSite = SameSiteMode.Strict                // or Lax / None
+                };
+
+                response.Cookies.Append("TestLoginCookie", "TestLoginCookieValue", cookieOptions);
             }
             catch(Exception e)
             {
@@ -150,7 +168,18 @@ public class Sessions
         {
             try
             {
-                string responseString = "";
+                HttpRequest request = context.Request;
+
+                var cookieValue = request.Cookies["TestLoginCookie"];
+
+                if (string.IsNullOrEmpty(cookieValue))
+                {
+                    cookieValue = "No Cookie Found";
+                }
+
+
+
+                string responseString = cookieValue;
 
                 HttpResponse response = context.Response;
 
