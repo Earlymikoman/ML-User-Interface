@@ -2398,11 +2398,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "/home/earlymikoman/ML-Session-Manager-Service/azure-file-server.csproj",
+      "projectUniqueName": "/home/earlymikoman/ML-User-Interface/azure-file-server.csproj",
       "projectName": "azure-file-server",
-      "projectPath": "/home/earlymikoman/ML-Session-Manager-Service/azure-file-server.csproj",
+      "projectPath": "/home/earlymikoman/ML-User-Interface/azure-file-server.csproj",
       "packagesPath": "/home/earlymikoman/.nuget/packages/",
-      "outputPath": "/home/earlymikoman/ML-Session-Manager-Service/obj/",
+      "outputPath": "/home/earlymikoman/ML-User-Interface/obj/",
       "projectStyle": "PackageReference",
       "configFilePaths": [
         "/home/earlymikoman/.nuget/NuGet/NuGet.Config"

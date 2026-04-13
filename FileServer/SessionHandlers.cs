@@ -69,7 +69,7 @@ public class Sessions
                 // health information to know how to react to your service, so
                 // don't be surprised if you see code with more involved health 
                 // checks.
-                await context.Response.WriteAsync("Default for ml-session-manager");
+                await context.Response.WriteAsync("Default for ml-user-interface");
             }
             catch(Exception e)
             {
@@ -113,399 +113,63 @@ public class Sessions
         }
     }
 
-    public async Task LoginDelegate(HttpContext context)
+    public async Task PromptingInterfaceDelegate(HttpContext context)
     {
-        using(var log = _logger.StartMethod(nameof(LoginDelegate), context))
+        // "using" is a C# system to ensure that the object is disposed of properly
+        // when the block is exited. In this case, it will call the Dispose method
+        using(var log = _logger.StartMethod(nameof(PromptingInterfaceDelegate), context))
         {
             try
-            {
-                HttpRequest request = context.Request;
-
-                UserMetadata m = new UserMetadata();
-                m.userid = GetParameterFromList("userid", request, log);
-                m.prompttype = GetParameterFromList("prompttype", request, log);
-
-                log.SetAttribute("request.userid", m.userid);
-                log.SetAttribute("request.prompttype", m.prompttype);
-
-                // First step is we will write the metadata to CosmosDB
-                // Here we are using Type mapping to convert our data structure
-                // to a JSON document that can be stored in CosmosDB.
-                if (await _cosmosDbWrapper.GetItemAsync<UserMetadata>(m.id, m.userid) == null)
-                {
-                    await _cosmosDbWrapper.AddItemAsync(m, m.userid);
-                }
-
-
-
-                string responseString = "";
-
-                HttpResponse response = context.Response;
-
-                response.StatusCode = 200;
-                response.ContentLength = Encoding.UTF8.GetByteCount(responseString);
-                response.ContentType = "text/plain; charset=utf-8";
-
-
-
-                var CurrentSessionData = new 
-                { 
-                    User = m.userid, 
-                    PromptType = m.prompttype, 
-                    PromptName = "None" 
-                };
-                string sessionJson = JsonSerializer.Serialize(CurrentSessionData);
-
-                //Grok knows its cookies
-                var cookieOptions = new CookieOptions
-                {
-                    Expires = DateTimeOffset.UtcNow.AddDays(1),   // or .AddHours(1), etc.
-                    HttpOnly = true,                              // Prevents JavaScript access (security)
-                    Secure = true,                                // Only send over HTTPS
-                    IsEssential = true,                           // For GDPR consent (if needed)
-                    SameSite = SameSiteMode.Strict                // or Lax / None
-                };
-
-                response.Cookies.Append("CurrentSessionData", sessionJson, cookieOptions);
-            }
-            catch(Exception e)
-            {
-                log.HandleException(e);
-            }
-        }
-    }
-    public async Task GetSessionDataDelegate(HttpContext context)
-    {
-        using(var log = _logger.StartMethod(nameof(GetSessionDataDelegate), context))
         {
-            try
+            string inputText = "";
+
+            // Prefer form data (from HTML form)
+            if (context.Request.HasFormContentType)
             {
-                HttpRequest request = context.Request;
-
-                var cookieValue = request.Cookies["CurrentSessionData"];
-                if (string.IsNullOrEmpty(cookieValue))
-                {
-                    cookieValue = "No Session Data Found";
-                }
-
-
-
-                string responseString = cookieValue;
-
-                HttpResponse response = context.Response;
-
-                response.StatusCode = 200;
-                response.ContentLength = Encoding.UTF8.GetByteCount(responseString);
-                response.ContentType = "text/plain; charset=utf-8";
-
-                await using (var bodyWriter = new StreamWriter(response.Body, leaveOpen: true))
-                {
-                    await bodyWriter.WriteAsync(responseString);
-                    await bodyWriter.FlushAsync();
-                }
-
-                log.SetAttribute("response.contenttype", response.ContentType);
-                log.SetAttribute("response.contentlength", response.ContentLength);
-                log.SetAttribute("response.content", response.Body);
+                inputText = context.Request.Form["text"].ToString().Trim();
             }
-            catch(Exception e)
+            // Fallback: query string (for direct curl testing)
+            else if (context.Request.Query.TryGetValue("text", out var queryValues))
             {
-                log.HandleException(e);
+                inputText = queryValues.ToString().Trim();
             }
+            // Fallback: raw body
+            else if (context.Request.ContentLength > 0)
+            {
+                using var reader = new StreamReader(context.Request.Body);
+                inputText = (await reader.ReadToEndAsync()).Trim();
+            }
+
+            if (string.IsNullOrWhiteSpace(inputText))
+            {
+                throw new UserErrorException("No text provided");
+            }
+
+            log.SetAttribute("input.text", inputText);
+            log.SetAttribute("input.length", inputText.Length);
+
+            // Call your processing function
+            await ProcessUserTextInput(inputText, log);
+
+            // Return nice JSON
+            var responseObj = new
+            {
+                status = "success",
+                message = "Text received and processed",
+                textLength = inputText.Length,
+                receivedTextPreview = inputText.Length > 100 
+                    ? inputText.Substring(0, 100) + "..." 
+                    : inputText
+            };
+
+            context.Response.StatusCode = 200;
+            context.Response.ContentType = "application/json; charset=utf-8";
+            await context.Response.WriteAsync(JsonSerializer.Serialize(responseObj));
         }
-    }
-
-    //Incomplete
-    public async Task WritePromptResponseDelegate(HttpContext context)
-    {
-        using(var log = _logger.StartMethod(nameof(WritePromptResponseDelegate), context))
+        catch (Exception e)
         {
-            try
-            {
-                HttpRequest request = context.Request;
-
-                IFormFile fileContent = context.Request.Form.Files.FirstOrDefault();
-                if (fileContent == null)
-                {
-                    throw new UserErrorException("No file content found");
-                }
-                string fileString;
-                using (var reader = new StreamReader(fileContent.OpenReadStream()))
-                {
-                    fileString = await reader.ReadToEndAsync();
-                }
-
-                UserMetadata m = new UserMetadata();
-                m.userid = GetParameterFromList("userid", request, log);
-                m.prompttype = GetParameterFromList("prompttype", request, log);
-                string sourceprompt = m.prompttype + "-" + GetParameterFromList("promptname", request, log);
-
-                //m.filename = Path.ChangeExtension(Path.GetFileNameWithoutExtension(m.filename), Path.GetExtension(m.filename).ToLowerInvariant());               
-
-                string dataUrl = _configuration["AzureFileServer:ConnectionStrings:DataHandlerEndpoint"] + "/uploaddata?userid=" + m.userid + "&sourceprompt=" + sourceprompt;
-                log.SetAttribute("request.url", dataUrl);
-
-                var dataClient = _httpClientFactory.CreateClient();
-
-
-
-                //Grok showing me how to attach a file programmatically.
-                // Create the multipart form data (replicates -F)
-                var multipartContent = new MultipartFormDataContent();
-
-                // Convert your string to bytes and add it as a file field (replicates file=@FILENAME.EXT)
-                var newFileContent = new StringContent(fileString);
-                newFileContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("text/plain");
-                multipartContent.Add(newFileContent, "file", "dummy.txt");
-
-
-
-                var response = await dataClient.PostAsync(dataUrl, multipartContent);
-
-                if (!response.IsSuccessStatusCode)
-                {
-                    var error = await response.Content.ReadAsStringAsync();
-                    log.SetAttribute("downstream.error", $"{(int)response.StatusCode} {response.ReasonPhrase}");
-                    throw new UserErrorException($"Forward failed: {(int)response.StatusCode}");
-                }
-
-                // The POST has no response body, so we just return and the system
-                // will return a 200 OK to the caller.
-            }
-            catch (UserErrorException e)
-            {
-                log.LogUserError(e.Message);
-            }
-            catch(Exception e)
-            {
-                log.HandleException(e);
-            }
+            log.HandleException(e);
+        }
         }
     }
-
-    //Complete
-    public async Task AcquirePromptDelegate(HttpContext context)
-    {
-        using(var log = _logger.StartMethod(nameof(AcquirePromptDelegate), context))
-        {
-            try
-            {
-                HttpRequest request = context.Request;
-
-                UserMetadata m = new UserMetadata();
-                m.userid = GetParameterFromList("userid", request, log);
-                m.prompttype = GetParameterFromList("prompttype", request, log);
-
-                log.SetAttribute("request.userid", m.userid);
-                log.SetAttribute("request.prompttype", m.prompttype);
-
-                m = await _cosmosDbWrapper.GetItemAsync<UserMetadata>(m.id, m.userid);
-                if (m == null)
-                {
-                    throw new UserErrorException();
-                }
-
-
-
-                string listUrl = _configuration["AzureFileServer:ConnectionStrings:PromptHandlerEndpoint"] + "/listprompts?prompttype=" + m.prompttype;
-                log.SetAttribute("request.url", listUrl);
-
-                var listClient = _httpClientFactory.CreateClient();
-                var listResponse = await listClient.GetAsync
-                (_configuration["AzureFileServer:ConnectionStrings:PromptHandlerEndpoint"] + "/listprompts?prompttype=" + m.prompttype);
-
-                if (!listResponse.IsSuccessStatusCode)
-                {
-                    throw new UserErrorException();
-                }
-
-                var listContent = await listResponse.Content.ReadAsStringAsync();
-                List<string> promptnames = new List<string>(){""};
-                foreach (var character in listContent)
-                {
-                    if (character == '\n')
-                    {
-                        promptnames.Add("");
-
-                        continue;
-                    }
-
-                    promptnames[promptnames.Count - 1] += character;
-                }
-
-
-
-                string responseString = "No New Prompts Found Of " + promptnames.Count + "Prompts.\n\n" + listContent;
-                if (m.promptdepth + 1 < promptnames.Count - 1 && m.promptdepth >= 0)
-                {
-                    string promptToRequest = promptnames[m.promptdepth + 1];
-                    responseString = "Couldn't Find Prompt: " + promptToRequest;
-
-                    var promptClient = _httpClientFactory.CreateClient();
-                    var promptResponse = await promptClient.GetAsync
-                    (_configuration["AzureFileServer:ConnectionStrings:PromptHandlerEndpoint"] + "/getprompt?prompttype=" + m.prompttype + "&promptname=" + promptToRequest);
-
-                    if (!promptResponse.IsSuccessStatusCode)
-                    {
-                        throw new UserErrorException();
-                    }
-
-                    var promptContent = await promptResponse.Content.ReadAsStringAsync();
-
-                    responseString = promptContent;
-                }
-
-
-
-                HttpResponse response = context.Response;
-
-                response.StatusCode = 200;
-                response.ContentLength = Encoding.UTF8.GetByteCount(responseString);
-                response.ContentType = "text/plain; charset=utf-8";
-
-                await using (var bodyWriter = new StreamWriter(response.Body, leaveOpen: true))
-                {
-                    await bodyWriter.WriteAsync(responseString);
-                    await bodyWriter.FlushAsync();
-                }
-
-                log.SetAttribute("response.contenttype", response.ContentType);
-                log.SetAttribute("response.contentlength", response.ContentLength);
-                log.SetAttribute("response.content", response.Body);
-
-                var CurrentSessionData = new 
-                { 
-                    User = m.userid, 
-                    PromptType = m.prompttype, 
-                    PromptName = "None" 
-                };
-                string sessionJson = JsonSerializer.Serialize(CurrentSessionData);
-
-                //Grok knows its cookies
-                var cookieOptions = new CookieOptions
-                {
-                    Expires = DateTimeOffset.UtcNow.AddDays(1),   // or .AddHours(1), etc.
-                    HttpOnly = true,                              // Prevents JavaScript access (security)
-                    Secure = true,                                // Only send over HTTPS
-                    IsEssential = true,                           // For GDPR consent (if needed)
-                    SameSite = SameSiteMode.Strict                // or Lax / None
-                };
-
-                response.Cookies.Append("CurrentSessionData", sessionJson, cookieOptions);
-            }
-            catch (UserErrorException e)
-            {
-                log.LogUserError(e.Message);
-            }
-            catch(Exception e)
-            {
-                log.HandleException(e);
-            }
-        }
-    }
-
-    //Incomplete
-    // public async Task ListPromptResponsesDelegate(HttpContext context)
-    // {
-    //     using(var log = _logger.StartMethod(nameof(ListPromptResponsesDelegate), context))
-    //     {
-    //         try
-    //         {
-    //             HttpRequest request = context.Request;
-
-    //             UserMetadata m = new UserMetadata();
-    //             m.userid = GetParameterFromList("userid", request, log);
-
-    //             // TODO: Implement the list files delegate to return a list of files
-    //             // that are associated with the userId provided in the HTTP request.
-    //             HttpResponse response = context.Response;
-    //             string query = $"SELECT * FROM c WHERE c.userid = \"{m.userid}\"";
-    //             IEnumerable<UserMetadata> metadatas = await _cosmosDbWrapper.GetItemsAsync<UserMetadata>(query);
-    //             if (metadatas == null)
-    //             {
-    //                 throw new UserErrorException();
-    //             }
-                
-    //             string fileStrings = metadatas.Count() + " Files Found:\n";
-    //             foreach (UserMetadata metadata in metadatas)
-    //             {
-    //                 fileStrings += "\t" + metadata.ToString() + "\n";
-    //             }
-    //             response.StatusCode = 200;
-    //             response.ContentLength = Encoding.UTF8.GetByteCount(fileStrings);
-    //             response.ContentType = "text/plain; charset=utf-8";
-
-    //             await using (var bodyWriter = new StreamWriter(response.Body, leaveOpen: true))
-    //             {
-    //                 await bodyWriter.WriteAsync(fileStrings);
-    //                 await bodyWriter.FlushAsync();
-    //             }
-
-    //             log.SetAttribute("response.contenttype", response.ContentType);
-    //             log.SetAttribute("response.contentlength", response.ContentLength);
-    //             log.SetAttribute("response.content", response.Body);
-    //         }
-    //         catch (UserErrorException e)
-    //         {
-    //             log.LogUserError(e.Message);
-    //         }
-    //         catch(Exception e)
-    //         {
-    //             log.HandleException(e);
-    //         }
-    //     }
-    // }
-
-    //Incomplete
-    // public async Task DeletePromptResponseDelegate(HttpContext context)
-    // {
-    //     using(var log = _logger.StartMethod(nameof(DeletePromptResponseDelegate), context))
-    //     {
-    //         try
-    //         {
-    //             HttpRequest request = context.Request;
-
-    //             UserMetadata m = new UserMetadata();
-    //             m.userid = GetParameterFromList("userid", request, log);
-    //             m.filename = GetParameterFromList("filename", request, log);
-
-    //             m.filename = Path.ChangeExtension(Path.GetFileNameWithoutExtension(m.filename), Path.GetExtension(m.filename).ToLowerInvariant());
-
-    //             // TODO: Implement the delete file delegate to remove the file
-    //             // from the storage system and the metadata from the CosmosDB database.
-    //             //Failure to find the file to be deleted will be logged, but not considered a failure state.
-    //             //I don't know what would cause "Terminal Failure" to show, but I know it would indeed be terminal, so that's what the default value gets to be.
-    //             string deletionStatus = "Terminal Failure";
-    //             if (await _cosmosDbWrapper.GetItemAsync<UserMetadata>(m.id, m.userid) != null)
-    //             {
-    //                 await _cosmosDbWrapper.DeleteItemAsync(m.id, m.userid);
-    //                 deletionStatus = "File Found And Deleted";
-    //             }
-    //             else
-    //             {
-    //                 deletionStatus = "File Not Found";
-                    
-    //             }
-    //             log.SetAttribute("deletion.status", deletionStatus);
-
-    //             var blobStorage = new BlobStorageWrapper(_configuration);
-    //             await blobStorage.DeleteBlob(m.userid, m.filename);
-
-    //             HttpResponse response = context.Response;
-    //             response.StatusCode = 200;
-    //             response.ContentLength = Encoding.UTF8.GetByteCount(deletionStatus + ": " + m.filename);
-    //             response.ContentType = "text/plain; charset=utf-8";
-
-    //             await using (var bodyWriter = new StreamWriter(response.Body, leaveOpen: true))
-    //             {
-    //                 await bodyWriter.WriteAsync(deletionStatus + ": " + m.filename);
-    //                 await bodyWriter.FlushAsync();
-    //             }
-    //         }
-    //         catch(Exception e)
-    //         {
-    //             log.HandleException(e);
-    //         }
-    //     }
-    // }
 }
