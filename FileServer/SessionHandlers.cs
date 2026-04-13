@@ -149,7 +149,7 @@ public class Sessions
             log.SetAttribute("input.length", inputText.Length);
 
             // Call your processing function
-            await ProcessUserTextInput(inputText, log);
+            //await ProcessUserTextInput(inputText, log);
 
             // Return nice JSON
             var responseObj = new

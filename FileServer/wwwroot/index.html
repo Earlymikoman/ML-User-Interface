@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <title>Simple Text Input</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 40px; }
+        form { max-width: 600px; }
+        input[type="text"] { width: 100%; padding: 10px; font-size: 16px; margin-bottom: 10px; }
+        button { padding: 10px 20px; font-size: 16px; }
+        #result { margin-top: 20px; padding: 15px; border: 1px solid #ccc; min-height: 50px; white-space: pre-wrap; }
+    </style>
+</head>
+<body>
+    <h1>Simple Text Input GUI</h1>
+    
+    <form id="textForm" method="POST" action="/simpletext">
+        <label for="text">Enter your text:</label><br>
+        <input type="text" id="text" name="text" placeholder="Type something here..." required />
+        <br><br>
+        <button type="submit">Submit Text</button>
+    </form>
+
+    <div id="result"></div>
+
+    <script>
+        const form = document.getElementById('textForm');
+        const resultDiv = document.getElementById('result');
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();   // prevent full page reload
+
+            const formData = new FormData(form);
+            
+            try {
+                const response = await fetch('/simpletext', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await response.json();
+                resultDiv.innerHTML = `<strong>Success!</strong><br>` + 
+                                      JSON.stringify(data, null, 2);
+            } catch (err) {
+                resultDiv.innerHTML = `<strong>Error:</strong> ${err.message}`;
+            }
+        });
+    </script>
+</body>
+</html>

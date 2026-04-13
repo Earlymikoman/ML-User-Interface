@@ -62,6 +62,10 @@ class Program
         app.MapGet("/healthcheck", instance.HealthCheckDelegate);
         app.MapGet("/promptinginterface", instance.PromptingInterfaceDelegate);
 
+        //Grok
+        app.UseDefaultFiles();   // serves index.html automatically at /
+        app.UseStaticFiles();    // serves all files in wwwroot
+
         app.Run();
     }
 }
