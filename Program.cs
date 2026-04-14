@@ -61,7 +61,7 @@ class Program
         app.UseDefaultFiles();   // serves index.html automatically at /
         app.UseStaticFiles();    // serves all files in wwwroot
 
-        //app.MapGet("/", () => Results.Redirect("/index.html")); // optional
+        app.MapGet("/", () => Results.Redirect("/index.html")); // optional
         app.MapPost("/simpletext", instance.SimpleTextInputDelegate);
 
         //app.MapGet("/", instance.DefaultDelegate);
