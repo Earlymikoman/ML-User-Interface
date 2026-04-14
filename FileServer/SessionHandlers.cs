@@ -172,4 +172,61 @@ public class Sessions
         }
         }
     }
+
+    public async Task SimpleTextInputDelegate(HttpContext context)
+    {
+        using (var log = _logger.StartMethod(nameof(SimpleTextInputDelegate), context))
+        {
+            try
+            {
+                string inputText = "";
+
+                // This is the correct way to read form data from an HTML <form> submission
+                if (context.Request.HasFormContentType)
+                {
+                    var form = await context.Request.ReadFormAsync();
+                    inputText = form["text"].ToString().Trim();   // No ? needed - indexer returns StringValues.Empty if missing
+                }
+                // Fallback for testing with curl or direct URL
+                else if (context.Request.Query.TryGetValue("text", out var queryValues))
+                {
+                    inputText = queryValues.ToString().Trim();
+                }
+
+                if (string.IsNullOrWhiteSpace(inputText))
+                {
+                    context.Response.StatusCode = 400;
+                    await context.Response.WriteAsync(
+                        JsonSerializer.Serialize(new { error = "Please enter some text in the box." }));
+                    return;
+                }
+
+                log.SetAttribute("input.text", inputText);
+                log.SetAttribute("input.length", inputText.Length);
+
+                // Call your processing function here
+                //await ProcessUserTextInput(inputText, log);
+
+                // Return success
+                var result = new
+                {
+                    status = "success",
+                    message = "Text received successfully",
+                    text = inputText,
+                    length = inputText.Length
+                };
+
+                context.Response.StatusCode = 200;
+                context.Response.ContentType = "application/json; charset=utf-8";
+                await context.Response.WriteAsync(JsonSerializer.Serialize(result));
+            }
+            catch (Exception ex)
+            {
+                log.HandleException(ex);
+                context.Response.StatusCode = 500;
+                await context.Response.WriteAsync(
+                    JsonSerializer.Serialize(new { error = "An error occurred on the server" }));
+            }
+        }
+    }
 }

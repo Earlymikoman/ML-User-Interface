@@ -1,22 +1,22 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="utf-8" />
-    <title>Simple Text Input</title>
+    <meta charset="utf-8">
+    <title>Text Input GUI</title>
     <style>
         body { font-family: Arial, sans-serif; margin: 40px; }
-        form { max-width: 600px; }
-        input[type="text"] { width: 100%; padding: 10px; font-size: 16px; margin-bottom: 10px; }
-        button { padding: 10px 20px; font-size: 16px; }
-        #result { margin-top: 20px; padding: 15px; border: 1px solid #ccc; min-height: 50px; white-space: pre-wrap; }
+        input[type="text"] { width: 100%; padding: 12px; font-size: 16px; margin: 10px 0; }
+        button { padding: 12px 24px; font-size: 16px; }
+        #result { margin-top: 20px; padding: 15px; border: 1px solid #ddd; min-height: 60px; }
+        .success { background-color: #d4edda; color: #155724; }
+        .error { background-color: #f8d7da; color: #721c24; }
     </style>
 </head>
 <body>
-    <h1>Simple Text Input GUI</h1>
+    <h1>Enter Text</h1>
     
-    <form id="textForm" method="POST" action="/simpletext">
-        <label for="text">Enter your text:</label><br>
-        <input type="text" id="text" name="text" placeholder="Type something here..." required />
+    <form id="textForm">
+        <input type="text" id="textInput" name="text" placeholder="Type your text here..." required autofocus>
         <br><br>
         <button type="submit">Submit Text</button>
     </form>
@@ -28,10 +28,17 @@
         const resultDiv = document.getElementById('result');
 
         form.addEventListener('submit', async (e) => {
-            e.preventDefault();   // prevent full page reload
+            e.preventDefault();
 
-            const formData = new FormData(form);
-            
+            const text = document.getElementById('textInput').value.trim();
+            if (!text) {
+                showResult("Please type something first.", "error");
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append("text", text);
+
             try {
                 const response = await fetch('/simpletext', {
                     method: 'POST',
@@ -39,12 +46,21 @@
                 });
 
                 const data = await response.json();
-                resultDiv.innerHTML = `<strong>Success!</strong><br>` + 
-                                      JSON.stringify(data, null, 2);
+
+                if (response.ok) {
+                    showResult(`Success! Received: "${data.text}" (${data.length} characters)`, "success");
+                } else {
+                    showResult(`Error: ${data.error || 'Unknown error'}`, "error");
+                }
             } catch (err) {
-                resultDiv.innerHTML = `<strong>Error:</strong> ${err.message}`;
+                showResult(`Request failed: ${err.message}`, "error");
             }
         });
+
+        function showResult(message, type) {
+            resultDiv.innerHTML = message;
+            resultDiv.className = type;
+        }
     </script>
 </body>
 </html>

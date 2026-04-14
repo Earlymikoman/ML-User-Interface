@@ -57,14 +57,16 @@ class Program
 
         Sessions instance = app.Services.GetRequiredService<Sessions>();
 
+        //Grok
+        app.UseDefaultFiles();   // serves index.html automatically at /
+        app.UseStaticFiles();    // serves all files in wwwroot
+
+        app.MapPost("/simpletext", instance.SimpleTextInputDelegate);
+
         app.MapGet("/", instance.DefaultDelegate);
 
         app.MapGet("/healthcheck", instance.HealthCheckDelegate);
         app.MapGet("/promptinginterface", instance.PromptingInterfaceDelegate);
-
-        //Grok
-        app.UseDefaultFiles();   // serves index.html automatically at /
-        app.UseStaticFiles();    // serves all files in wwwroot
 
         app.Run();
     }
