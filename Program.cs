@@ -59,8 +59,8 @@ class Program
         builder.Services.AddAuthentication()
             .AddGoogle(googleOptions =>
             {
-                googleOptions.ClientId = builder.Configuration["Authentication:Google:ClientId"];
-                googleOptions.ClientSecret = builder.Configuration["Authentication:Google:ClientSecret"];
+                googleOptions.ClientId = builder.Configuration["Authentication__Google__ClientId"];
+                googleOptions.ClientSecret = builder.Configuration["Authentication__Google__ClientSecret"];
 
                 googleOptions.Scope.Add("email");      // We only care about verified email
                 // googleOptions.Scope.Remove("profile"); // optional
@@ -115,7 +115,7 @@ class Program
             return Results.Json(response);
         });
 
-        
+
 
         app.MapGet("/", () => Results.Redirect("/index.html")); // optional //No Grok, this is not in fact optional.
         app.MapPost("/simpletext", instance.SimpleTextInputDelegate);
