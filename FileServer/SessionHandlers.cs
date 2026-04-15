@@ -126,6 +126,22 @@ public class Sessions
 
                 string userid = context.Request.Headers["X-MS-CLIENT-PRINCIPAL-NAME"].FirstOrDefault();
 
+                string sessionUrl =
+                _configuration["AzureFileServer:ConnectionStrings:SessionManagerEndpoint"] + "/login?userid=" + userid;
+                log.SetAttribute("request.url", sessionUrl);
+
+                var sessionClient = _httpClientFactory.CreateClient();
+                var sessionResponse = await sessionClient.GetAsync(sessionUrl);
+
+                if (!sessionResponse.IsSuccessStatusCode)
+                {
+                    var error = await sessionResponse.Content.ReadAsStringAsync();
+                    log.SetAttribute("downstream.error", $"{(int)sessionResponse.StatusCode} {sessionResponse.ReasonPhrase}");
+                    throw new UserErrorException($"Forward failed: {(int)sessionResponse.StatusCode}");
+                }
+
+
+
                 var CurrentSessionData = new 
                     { 
                         User = userid, 
