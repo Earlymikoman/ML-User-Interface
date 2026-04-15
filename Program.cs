@@ -71,7 +71,10 @@ class Program
         //app.MapGet("/", instance.DefaultDelegate);
 
         app.MapGet("/healthcheck", instance.HealthCheckDelegate);
-        app.MapGet("/promptinginterface", instance.PromptingInterfaceDelegate);
+        app.MapPost("/writepromptresponse", instance.WritePromptResponseDelegate);
+        app.MapGet("/aquireprompt", instance.AcquirePromptDelegate);
+        app.MapGet("/login", instance.LoginDelegate);
+        app.MapGet("cacheprompttype", instance.CachePromptTypeDelegate);
 
         app.Run();
     }

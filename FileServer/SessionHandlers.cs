@@ -113,63 +113,292 @@ public class Sessions
         }
     }
 
-    public async Task PromptingInterfaceDelegate(HttpContext context)
+    public async Task LoginDelegate(HttpContext context)
     {
         // "using" is a C# system to ensure that the object is disposed of properly
         // when the block is exited. In this case, it will call the Dispose method
-        using(var log = _logger.StartMethod(nameof(PromptingInterfaceDelegate), context))
+        using(var log = _logger.StartMethod(nameof(LoginDelegate), context))
         {
             try
-        {
-            string inputText = "";
-
-            // Prefer form data (from HTML form)
-            if (context.Request.HasFormContentType)
             {
-                inputText = context.Request.Form["text"].ToString().Trim();
+                HttpRequest request = context.Request;
+                HttpResponse response = context.Response;
+
+                string userid = context.Request.Headers["X-MS-CLIENT-PRINCIPAL-NAME"].FirstOrDefault();
+
+                var CurrentSessionData = new 
+                    { 
+                        User = userid, 
+                        PromptType = "", 
+                        PromptName = "" 
+                    };
+                    string sessionJson = JsonSerializer.Serialize(CurrentSessionData);
+
+                    //Grok knows its cookies
+                    var cookieOptions = new CookieOptions
+                    {
+                        Expires = DateTimeOffset.UtcNow.AddDays(1),   // or .AddHours(1), etc.
+                        HttpOnly = true,                              // Prevents JavaScript access (security)
+                        Secure = true,                                // Only send over HTTPS
+                        IsEssential = true,                           // For GDPR consent (if needed)
+                        SameSite = SameSiteMode.Strict                // or Lax / None
+                    };
+
+                    response.Cookies.Append("CurrentSessionData", sessionJson, cookieOptions);
+
+                    response.StatusCode = 200;
+                    response.ContentLength = Encoding.UTF8.GetByteCount("");
+                    response.ContentType = "text/plain; charset=utf-8";
+
+                    await using (var bodyWriter = new StreamWriter(response.Body, leaveOpen: true))
+                    {
+                        await bodyWriter.WriteAsync("");
+                        await bodyWriter.FlushAsync();
+                    }
+
+                log.SetAttribute("response.contenttype", response.ContentType);
+                log.SetAttribute("response.contentlength", response.ContentLength);
+                log.SetAttribute("response.content", response.Body);
             }
-            // Fallback: query string (for direct curl testing)
-            else if (context.Request.Query.TryGetValue("text", out var queryValues))
+            catch(Exception e)
             {
-                inputText = queryValues.ToString().Trim();
+                // While you can just throw the exception back to the web server,
+                // it is not recommended. It is better to catch the exception and
+                // log it, then return a 500 Internal Server Error to the caller yourself.
+                log.HandleException(e);
             }
-            // Fallback: raw body
-            else if (context.Request.ContentLength > 0)
-            {
-                using var reader = new StreamReader(context.Request.Body);
-                inputText = (await reader.ReadToEndAsync()).Trim();
-            }
-
-            if (string.IsNullOrWhiteSpace(inputText))
-            {
-                throw new UserErrorException("No text provided");
-            }
-
-            log.SetAttribute("input.text", inputText);
-            log.SetAttribute("input.length", inputText.Length);
-
-            // Call your processing function
-            //await ProcessUserTextInput(inputText, log);
-
-            // Return nice JSON
-            var responseObj = new
-            {
-                status = "success",
-                message = "Text received and processed",
-                textLength = inputText.Length,
-                receivedTextPreview = inputText.Length > 100 
-                    ? inputText.Substring(0, 100) + "..." 
-                    : inputText
-            };
-
-            context.Response.StatusCode = 200;
-            context.Response.ContentType = "application/json; charset=utf-8";
-            await context.Response.WriteAsync(JsonSerializer.Serialize(responseObj));
         }
-        catch (Exception e)
+    }
+    public async Task CachePromptTypeDelegate(HttpContext context)
+    {
+        // "using" is a C# system to ensure that the object is disposed of properly
+        // when the block is exited. In this case, it will call the Dispose method
+        using(var log = _logger.StartMethod(nameof(CachePromptTypeDelegate), context))
         {
-            log.HandleException(e);
+            try
+            {
+                HttpRequest request = context.Request;
+                HttpResponse response = context.Response;
+
+                string prompttype = GetParameterFromList("prompttype", request, log);
+
+                SessionData sessionData = new SessionData();
+                var cookieValue = request.Cookies["CurrentSessionData"];
+                if (string.IsNullOrEmpty(cookieValue))
+                {
+                    throw new UserErrorException("No Session Data Found");
+                }
+                sessionData = JsonSerializer.Deserialize<SessionData>(cookieValue);
+
+                var CurrentSessionData = new 
+                    { 
+                        User = sessionData.User, 
+                        PromptType = prompttype, 
+                        PromptName = sessionData.PromptName 
+                    };
+                    string sessionJson = JsonSerializer.Serialize(CurrentSessionData);
+
+                    //Grok knows its cookies
+                    var cookieOptions = new CookieOptions
+                    {
+                        Expires = DateTimeOffset.UtcNow.AddDays(1),   // or .AddHours(1), etc.
+                        HttpOnly = true,                              // Prevents JavaScript access (security)
+                        Secure = true,                                // Only send over HTTPS
+                        IsEssential = true,                           // For GDPR consent (if needed)
+                        SameSite = SameSiteMode.Strict                // or Lax / None
+                    };
+
+                    response.Cookies.Append("CurrentSessionData", sessionJson, cookieOptions);
+
+                    response.StatusCode = 200;
+                    response.ContentLength = Encoding.UTF8.GetByteCount("");
+                    response.ContentType = "text/plain; charset=utf-8";
+
+                    await using (var bodyWriter = new StreamWriter(response.Body, leaveOpen: true))
+                    {
+                        await bodyWriter.WriteAsync("");
+                        await bodyWriter.FlushAsync();
+                    }
+
+                log.SetAttribute("response.contenttype", response.ContentType);
+                log.SetAttribute("response.contentlength", response.ContentLength);
+                log.SetAttribute("response.content", response.Body);
+            }
+            catch(Exception e)
+            {
+                // While you can just throw the exception back to the web server,
+                // it is not recommended. It is better to catch the exception and
+                // log it, then return a 500 Internal Server Error to the caller yourself.
+                log.HandleException(e);
+            }
         }
+    }
+
+    public async Task WritePromptResponseDelegate(HttpContext context)
+    {
+        using(var log = _logger.StartMethod(nameof(WritePromptResponseDelegate), context))
+        {
+            try
+            {
+                HttpRequest request = context.Request;
+
+                IFormFile fileContent = context.Request.Form.Files.FirstOrDefault();
+                if (fileContent == null)
+                {
+                    throw new UserErrorException("No file content found");
+                }
+                string fileString;
+                using (var reader = new StreamReader(fileContent.OpenReadStream()))
+                {
+                    fileString = await reader.ReadToEndAsync();
+                }
+
+
+
+                UserMetadata m = new UserMetadata();
+                SessionData sessionData = new SessionData();
+                var cookieValue = request.Cookies["CurrentSessionData"];
+                if (string.IsNullOrEmpty(cookieValue))
+                {
+                    throw new UserErrorException("No Session Data Found");
+                }
+                sessionData = JsonSerializer.Deserialize<SessionData>(cookieValue);
+
+                //m.userid = context.Request.Headers["X-MS-CLIENT-PRINCIPAL-NAME"].FirstOrDefault();
+                m.userid = sessionData.User;
+                m.prompttype = sessionData.PromptType;
+                string promptname = sessionData.PromptName;
+
+                log.SetAttribute("cookies.userid", m.userid);
+                log.SetAttribute("cookies.prompttype", m.prompttype);
+                log.SetAttribute("cookies.promptname", promptname);
+
+
+
+                string sessionUrl =
+                _configuration["AzureFileServer:ConnectionStrings:SessionManagerEndpoint"] + "/writepromptresponse?userid=" + m.userid + "&prompttype=" + m.prompttype + "&promptname=" + promptname;
+                log.SetAttribute("request.url", sessionUrl);
+
+                
+
+                //Grok showing me how to attach a file programmatically.
+                // Create the multipart form data (replicates -F)
+                var multipartContent = new MultipartFormDataContent();
+
+                // Convert your string to bytes and add it as a file field (replicates file=@FILENAME.EXT)
+                var newFileContent = new StringContent(fileString);
+                newFileContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("text/plain");
+                multipartContent.Add(newFileContent, "file", "dummy.txt");
+
+
+
+                var sessionClient = _httpClientFactory.CreateClient();
+                var response = await sessionClient.PostAsync(sessionUrl, multipartContent);
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    var error = await response.Content.ReadAsStringAsync();
+                    log.SetAttribute("downstream.error", $"{(int)response.StatusCode} {response.ReasonPhrase}");
+                    throw new UserErrorException($"Forward failed: {(int)response.StatusCode}");
+                }
+
+                // The POST has no response body, so we just return and the system
+                // will return a 200 OK to the caller.
+            }
+            catch (UserErrorException e)
+            {
+                log.LogUserError(e.Message);
+            }
+            catch(Exception e)
+            {
+                log.HandleException(e);
+            }
+        }
+    }
+
+    //Complete
+    public async Task AcquirePromptDelegate(HttpContext context)
+    {
+        using(var log = _logger.StartMethod(nameof(AcquirePromptDelegate), context))
+        {
+            try
+            {
+                HttpRequest request = context.Request;
+                HttpResponse response = context.Response;
+
+                UserMetadata m = new UserMetadata();
+                SessionData sessionData = new SessionData();
+                var cookieValue = request.Cookies["CurrentSessionData"];
+                if (string.IsNullOrEmpty(cookieValue))
+                {
+                    throw new UserErrorException("No Session Data Found");
+                }
+                sessionData = JsonSerializer.Deserialize<SessionData>(cookieValue);
+
+                m.userid = sessionData.User;
+                m.prompttype = sessionData.PromptType;
+
+                log.SetAttribute("cookies.userid", m.userid);
+                log.SetAttribute("cookies.prompttype", m.prompttype);
+
+                
+
+                string sessionUrl = _configuration["AzureFileServer:ConnectionStrings:SessionManagerEndpoint"] + "/acquireprompt?userid=" + m.userid + "&prompttype=" + m.prompttype;
+                log.SetAttribute("request.url", sessionUrl);
+
+                var sessionClient = _httpClientFactory.CreateClient();
+                var sessionResponse = await sessionClient.GetAsync(sessionUrl);
+
+                if (!sessionResponse.IsSuccessStatusCode)
+                {
+                    throw new UserErrorException();
+                }
+
+                var sessionContent = await sessionResponse.Content.ReadAsStringAsync();
+                var promptData = JsonSerializer.Deserialize<Dictionary<string, string>>(sessionContent);
+
+                var CurrentSessionData = new 
+                    { 
+                        User = m.userid, 
+                        PromptType = m.prompttype, 
+                        PromptName = promptData["promptname"] 
+                    };
+                    string sessionJson = JsonSerializer.Serialize(CurrentSessionData);
+
+                    //Grok knows its cookies
+                    var cookieOptions = new CookieOptions
+                    {
+                        Expires = DateTimeOffset.UtcNow.AddDays(1),   // or .AddHours(1), etc.
+                        HttpOnly = true,                              // Prevents JavaScript access (security)
+                        Secure = true,                                // Only send over HTTPS
+                        IsEssential = true,                           // For GDPR consent (if needed)
+                        SameSite = SameSiteMode.Strict                // or Lax / None
+                    };
+
+                    response.Cookies.Append("CurrentSessionData", sessionJson, cookieOptions);
+
+                response.StatusCode = 200;
+                response.ContentLength = Encoding.UTF8.GetByteCount(promptData["promptcontent"]);
+                response.ContentType = "text/plain; charset=utf-8";
+
+                await using (var bodyWriter = new StreamWriter(response.Body, leaveOpen: true))
+                {
+                    await bodyWriter.WriteAsync(promptData["promptcontent"]);
+                    await bodyWriter.FlushAsync();
+                }
+
+                log.SetAttribute("response.contenttype", response.ContentType);
+                log.SetAttribute("response.contentlength", response.ContentLength);
+                log.SetAttribute("response.content", response.Body);
+            }
+            catch (UserErrorException e)
+            {
+                log.LogUserError(e.Message);
+            }
+            catch(Exception e)
+            {
+                log.HandleException(e);
+            }
         }
     }
 
