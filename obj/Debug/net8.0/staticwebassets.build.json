@@ -1,11 +1,39 @@
 {
   "Version": 1,
-  "Hash": "estXC+xa1jbMMNFBI87I1ZaICOUoEVRq4Z/qe/7yRRw=",
+  "Hash": "ps/0SQdZ5eniWbX3XHgsSQaJNbACzn3l4oXR8D72Arw=",
   "Source": "azure-file-server",
   "BasePath": "_content/azure-file-server",
   "Mode": "Default",
   "ManifestType": "Build",
   "ReferencedProjectsConfiguration": [],
-  "DiscoveryPatterns": [],
-  "Assets": []
+  "DiscoveryPatterns": [
+    {
+      "Name": "azure-file-server/wwwroot",
+      "Source": "azure-file-server",
+      "ContentRoot": "/home/earlymikoman/ML-User-Interface/wwwroot/",
+      "BasePath": "_content/azure-file-server",
+      "Pattern": "**"
+    }
+  ],
+  "Assets": [
+    {
+      "Identity": "/home/earlymikoman/ML-User-Interface/wwwroot/index.html",
+      "SourceId": "azure-file-server",
+      "SourceType": "Discovered",
+      "ContentRoot": "/home/earlymikoman/ML-User-Interface/wwwroot/",
+      "BasePath": "_content/azure-file-server",
+      "RelativePath": "index.html",
+      "AssetKind": "All",
+      "AssetMode": "All",
+      "AssetRole": "Primary",
+      "AssetMergeBehavior": "PreferTarget",
+      "AssetMergeSource": "",
+      "RelatedAsset": "",
+      "AssetTraitName": "",
+      "AssetTraitValue": "",
+      "CopyToOutputDirectory": "Never",
+      "CopyToPublishDirectory": "PreserveNewest",
+      "OriginalItemSpec": "wwwroot/index.html"
+    }
+  ]
 }

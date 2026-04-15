@@ -16,6 +16,11 @@ using Telemetry.Trace;
 
 using AzureFileServer.FileServer;
 
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Google;
+using System.Security.Claims;
+using Microsoft.AspNetCore.Http;
+
 namespace AzureFileServer;
 
 // This is the entry point for the application. It sets up the configuration and the services
@@ -50,6 +55,17 @@ class Program
             .AddJsonConsoleExporter(); // Output log lines to the console
         });
 
+        // === Google setup (no persistent login) ===
+        builder.Services.AddAuthentication()
+            .AddGoogle(googleOptions =>
+            {
+                googleOptions.ClientId = builder.Configuration["Authentication:Google:ClientId"];
+                googleOptions.ClientSecret = builder.Configuration["Authentication:Google:ClientSecret"];
+
+                googleOptions.Scope.Add("email");      // We only care about verified email
+                // googleOptions.Scope.Remove("profile"); // optional
+            });
+
         builder.Services.AddHttpClient();
         builder.Services.AddSingleton<Sessions>();
 
@@ -61,7 +77,47 @@ class Program
         app.UseDefaultFiles();   // serves index.html automatically at /
         app.UseStaticFiles();    // serves all files in wwwroot
 
-        app.MapGet("/", () => Results.Redirect("/index.html")); // optional
+        app.UseAuthentication();
+
+        // Start Google verification
+        app.MapGet("/verify-google", () => Results.Challenge(
+            new AuthenticationProperties { RedirectUri = "/google-verified" },
+            [GoogleDefaults.AuthenticationScheme]));
+
+        // Google callback - here we get the verified email
+        app.MapGet("/google-verified", async (HttpContext context) =>
+        {
+            var result = await context.AuthenticateAsync(GoogleDefaults.AuthenticationScheme);
+
+            if (!result.Succeeded || result.Principal == null)
+            {
+                return Results.BadRequest(new { error = "Google verification failed" });
+            }
+
+            var email = result.Principal.FindFirstValue(ClaimTypes.Email);
+
+            if (string.IsNullOrEmpty(email))
+            {
+                return Results.BadRequest(new { error = "No email returned from Google" });
+            }
+
+            // Google has verified this email address belongs to the user
+            var response = new
+            {
+                status = "verified",
+                email = email,
+                verifiedAt = DateTime.UtcNow
+            };
+
+            // Clean up temporary Google auth state (important)
+            await context.SignOutAsync(GoogleDefaults.AuthenticationScheme);
+
+            return Results.Json(response);
+        });
+
+        
+
+        app.MapGet("/", () => Results.Redirect("/index.html")); // optional //No Grok, this is not in fact optional.
         app.MapPost("/simpletext", instance.SimpleTextInputDelegate);
 
         //app.MapGet("/", instance.DefaultDelegate);

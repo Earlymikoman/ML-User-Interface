@@ -81,6 +81,22 @@
           }
         }
       },
+      "Microsoft.AspNetCore.Authentication.Google/8.0.22": {
+        "type": "package",
+        "compile": {
+          "lib/net8.0/Microsoft.AspNetCore.Authentication.Google.dll": {
+            "related": ".xml"
+          }
+        },
+        "runtime": {
+          "lib/net8.0/Microsoft.AspNetCore.Authentication.Google.dll": {
+            "related": ".xml"
+          }
+        },
+        "frameworkReferences": [
+          "Microsoft.AspNetCore.App"
+        ]
+      },
       "Microsoft.Azure.Cosmos/3.40.0": {
         "type": "package",
         "dependencies": {
@@ -1008,6 +1024,21 @@
         "lib/net6.0/Azure.Storage.Common.xml",
         "lib/netstandard2.0/Azure.Storage.Common.dll",
         "lib/netstandard2.0/Azure.Storage.Common.xml"
+      ]
+    },
+    "Microsoft.AspNetCore.Authentication.Google/8.0.22": {
+      "sha512": "NXmczBh2Ze0x+HbMXIlBHoG+8y6NZHA1SA8vNVAUJdlw1B4w78ZJ3L5dnNNfstBs35bGOdG5F2TSp00Gx48Q/w==",
+      "type": "package",
+      "path": "microsoft.aspnetcore.authentication.google/8.0.22",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "Icon.png",
+        "THIRD-PARTY-NOTICES.TXT",
+        "lib/net8.0/Microsoft.AspNetCore.Authentication.Google.dll",
+        "lib/net8.0/Microsoft.AspNetCore.Authentication.Google.xml",
+        "microsoft.aspnetcore.authentication.google.8.0.22.nupkg.sha512",
+        "microsoft.aspnetcore.authentication.google.nuspec"
       ]
     },
     "Microsoft.Azure.Cosmos/3.40.0": {
@@ -2384,6 +2415,7 @@
     "net8.0": [
       "Azure.Identity >= 1.11.4",
       "Azure.Storage.Blobs >= 12.20.0",
+      "Microsoft.AspNetCore.Authentication.Google >= 8.0.22",
       "Microsoft.Azure.Cosmos >= 3.40.0",
       "Newtonsoft.Json >= 13.0.3",
       "OpenTelemetry >= 1.8.1",
@@ -2436,6 +2468,10 @@
           "Azure.Storage.Blobs": {
             "target": "Package",
             "version": "[12.20.0, )"
+          },
+          "Microsoft.AspNetCore.Authentication.Google": {
+            "target": "Package",
+            "version": "[8.0.22, )"
           },
           "Microsoft.Azure.Cosmos": {
             "target": "Package",

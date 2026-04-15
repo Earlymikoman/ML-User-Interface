@@ -1,0 +1,25 @@
+{
+  "Files": [
+    {
+      "Id": "/home/earlymikoman/ML-User-Interface/wwwroot/index.html",
+      "PackagePath": "staticwebassets/index.html"
+    },
+    {
+      "Id": "obj/Debug/net8.0/staticwebassets/msbuild.azure-file-server.Microsoft.AspNetCore.StaticWebAssets.props",
+      "PackagePath": "build\\Microsoft.AspNetCore.StaticWebAssets.props"
+    },
+    {
+      "Id": "obj/Debug/net8.0/staticwebassets/msbuild.build.azure-file-server.props",
+      "PackagePath": "build\\azure-file-server.props"
+    },
+    {
+      "Id": "obj/Debug/net8.0/staticwebassets/msbuild.buildMultiTargeting.azure-file-server.props",
+      "PackagePath": "buildMultiTargeting\\azure-file-server.props"
+    },
+    {
+      "Id": "obj/Debug/net8.0/staticwebassets/msbuild.buildTransitive.azure-file-server.props",
+      "PackagePath": "buildTransitive\\azure-file-server.props"
+    }
+  ],
+  "ElementsToRemove": []
+}
