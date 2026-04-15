@@ -126,27 +126,19 @@ public class Sessions
 
                 string userid = context.Request.Headers["X-MS-CLIENT-PRINCIPAL-NAME"].FirstOrDefault();
 
-                string sessionUrl =
-                _configuration["AzureFileServer:ConnectionStrings:SessionManagerEndpoint"] + "/login?userid=" + userid;
-                log.SetAttribute("request.url", sessionUrl);
-
-                var sessionClient = _httpClientFactory.CreateClient();
-                var sessionResponse = await sessionClient.GetAsync(sessionUrl);
-
-                if (!sessionResponse.IsSuccessStatusCode)
+                SessionData sessionData = new SessionData();
+                var cookieValue = request.Cookies["CurrentSessionData"];
+                if (string.IsNullOrEmpty(cookieValue))
                 {
-                    var error = await sessionResponse.Content.ReadAsStringAsync();
-                    log.SetAttribute("downstream.error", $"{(int)sessionResponse.StatusCode} {sessionResponse.ReasonPhrase}");
-                    throw new UserErrorException($"Forward failed: {(int)sessionResponse.StatusCode}");
+                    throw new UserErrorException("No Session Data Found");
                 }
-
-
+                sessionData = JsonSerializer.Deserialize<SessionData>(cookieValue);
 
                 var CurrentSessionData = new 
                     { 
                         User = userid, 
-                        PromptType = "", 
-                        PromptName = "" 
+                        PromptType = sessionData.PromptType, 
+                        PromptName = sessionData.PromptName 
                     };
                     string sessionJson = JsonSerializer.Serialize(CurrentSessionData);
 
@@ -162,7 +154,25 @@ public class Sessions
 
                     response.Cookies.Append("CurrentSessionData", sessionJson, cookieOptions);
 
-                    response.StatusCode = 200;
+
+
+                string sessionUrl =
+                _configuration["AzureFileServer:ConnectionStrings:SessionManagerEndpoint"] + "/login?userid=" + userid + "&prompttype=" + sessionData.PromptType;
+                log.SetAttribute("request.url", sessionUrl);
+
+                var sessionClient = _httpClientFactory.CreateClient();
+                var sessionResponse = await sessionClient.GetAsync(sessionUrl);
+
+                if (!sessionResponse.IsSuccessStatusCode)
+                {
+                    var error = await sessionResponse.Content.ReadAsStringAsync();
+                    log.SetAttribute("downstream.error", $"{(int)sessionResponse.StatusCode} {sessionResponse.ReasonPhrase}");
+                    throw new UserErrorException($"Forward failed: {(int)sessionResponse.StatusCode}");
+                }
+
+
+
+                response.StatusCode = 200;
                     response.ContentLength = Encoding.UTF8.GetByteCount("");
                     response.ContentType = "text/plain; charset=utf-8";
 
