@@ -168,9 +168,7 @@ public class Sessions
                     throw new UserErrorException($"Forward failed: {(int)sessionResponse.StatusCode}");
                 }
 
-
-                var loginString = "Successfully Logged In As " + userid + "-" + prompttype;
-                await response.WriteAsJsonAsync(loginString);
+                await response.WriteAsJsonAsync(sessionResponse);
 
                 log.SetAttribute("response.contenttype", response.ContentType);
                 log.SetAttribute("response.contentlength", response.ContentLength);
