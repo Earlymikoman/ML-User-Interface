@@ -160,7 +160,7 @@ public class Sessions
 
 
                 string sessionUrl =
-                _configuration["AzureFileServer:ConnectionStrings:SessionManagerEndpoint"] + "/login?userid=" + userid + "&prompttype=" + sessionData.PromptType;
+                _configuration["AzureFileServer:ConnectionStrings:SessionManagerEndpoint"] + "/login?userid=" + userid + "&prompttype=" + prompttype;
                 log.SetAttribute("request.url", sessionUrl);
 
                 var sessionClient = _httpClientFactory.CreateClient();
