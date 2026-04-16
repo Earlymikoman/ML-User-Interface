@@ -218,7 +218,6 @@ public class Sessions
 
 
 
-                UserMetadata m = new UserMetadata();
                 SessionData sessionData = new SessionData();
                 var cookieValue = request.Cookies["CurrentSessionData"];
                 if (string.IsNullOrEmpty(cookieValue))
@@ -228,18 +227,18 @@ public class Sessions
                 sessionData = JsonSerializer.Deserialize<SessionData>(cookieValue);
 
                 //m.userid = context.Request.Headers["X-MS-CLIENT-PRINCIPAL-NAME"].FirstOrDefault();
-                m.userid = sessionData.User;
-                m.prompttype = sessionData.PromptType;
+                string userid = sessionData.User;
+                string prompttype = sessionData.PromptType;
                 string promptname = sessionData.PromptName;
 
-                log.SetAttribute("cookies.userid", m.userid);
-                log.SetAttribute("cookies.prompttype", m.prompttype);
+                log.SetAttribute("cookies.userid", userid);
+                log.SetAttribute("cookies.prompttype", prompttype);
                 log.SetAttribute("cookies.promptname", promptname);
 
 
 
                 string sessionUrl =
-                _configuration["AzureFileServer:ConnectionStrings:SessionManagerEndpoint"] + "/writepromptresponse?userid=" + m.userid + "&prompttype=" + m.prompttype + "&promptname=" + promptname;
+                _configuration["AzureFileServer:ConnectionStrings:SessionManagerEndpoint"] + "/writepromptresponse?userid=" + userid + "&prompttype=" + prompttype + "&promptname=" + promptname;
                 log.SetAttribute("request.url", sessionUrl);
 
                 
@@ -289,7 +288,6 @@ public class Sessions
                 HttpRequest request = context.Request;
                 HttpResponse response = context.Response;
 
-                UserMetadata m = new UserMetadata();
                 SessionData sessionData = new SessionData();
                 var cookieValue = request.Cookies["CurrentSessionData"];
                 if (string.IsNullOrEmpty(cookieValue))
@@ -298,15 +296,15 @@ public class Sessions
                 }
                 sessionData = JsonSerializer.Deserialize<SessionData>(cookieValue);
 
-                m.userid = sessionData.User;
-                m.prompttype = sessionData.PromptType;
+                string userid = sessionData.User;
+                string prompttype = sessionData.PromptType;
 
-                log.SetAttribute("cookies.userid", m.userid);
-                log.SetAttribute("cookies.prompttype", m.prompttype);
+                log.SetAttribute("cookies.userid", userid);
+                log.SetAttribute("cookies.prompttype", prompttype);
 
                 
 
-                string sessionUrl = _configuration["AzureFileServer:ConnectionStrings:SessionManagerEndpoint"] + "/acquireprompt?userid=" + m.userid + "&prompttype=" + m.prompttype;
+                string sessionUrl = _configuration["AzureFileServer:ConnectionStrings:SessionManagerEndpoint"] + "/acquireprompt?userid=" + userid + "&prompttype=" + prompttype;
                 log.SetAttribute("request.url", sessionUrl);
 
                 var sessionClient = _httpClientFactory.CreateClient();
@@ -322,8 +320,8 @@ public class Sessions
 
                 var CurrentSessionData = new 
                     { 
-                        User = m.userid, 
-                        PromptType = m.prompttype, 
+                        User = userid, 
+                        PromptType = prompttype, 
                         PromptName = promptData["promptname"] 
                     };
                     string sessionJson = JsonSerializer.Serialize(CurrentSessionData);
