@@ -88,7 +88,7 @@ sessionBtn.addEventListener('click', async () => {
                 });
                 
                 if (response.ok) {
-                    showResult("Success! Response submitted.", "success");
+                    showResult("Success! Response submitted: " + text, "success");
                 } else {
                     const error = await response.text();
                     showResult(`Error: ${error}`, "error");
@@ -140,7 +140,7 @@ sessionBtn.addEventListener('click', async () => {
             const data = await response.json();
 
             if (response.ok) {
-                showResult(`Success! Received: "${data.text}" (${data.length} characters)`, "success");
+                showResult(`Success! Prompt Type: ` + text, "success");
             } else {
                 showResult(`Error: ${data.error || 'Unknown error'}`, "error");
             }
