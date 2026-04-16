@@ -67,28 +67,31 @@ sessionBtn.addEventListener('click', async () => {
 
         responseForm.addEventListener('submit', async (e) => {
             e.preventDefault();
-
+            
             const text = document.getElementById('responseInput').value.trim();
             if (!text) {
                 showResult("Please type something first.", "error");
                 return;
             }
-
+            
+            // Create a File from the text
+            const file = new File([text], "response.txt", { type: "text/plain" });
+            
+            // Create FormData and append as file
             const formData = new FormData();
-            formData.append("text", text);
-
+            formData.append("file", file);  // ← Key must match backend expectation
+            
             try {
                 const response = await fetch('/writepromptresponse', {
                     method: 'POST',
                     body: formData
                 });
-
-                const data = await response.json();
-
+                
                 if (response.ok) {
-                    showResult(`Success! Received: "${data.text}" (${data.length} characters)`, "success");
+                    showResult("Success! Response submitted.", "success");
                 } else {
-                    showResult(`Error: ${data.error || 'Unknown error'}`, "error");
+                    const error = await response.text();
+                    showResult(`Error: ${error}`, "error");
                 }
             } catch (err) {
                 showResult(`Request failed: ${err.message}`, "error");

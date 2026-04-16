@@ -254,7 +254,7 @@ public class Sessions
                 multipartContent.Add(newFileContent, "file", "dummy.txt");
 
 
-
+                //Grok showing me how to forward.
                 var sessionClient = _httpClientFactory.CreateClient();
                 var response = await sessionClient.PostAsync(sessionUrl, multipartContent);
 
