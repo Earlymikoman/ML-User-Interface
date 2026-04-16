@@ -74,7 +74,6 @@ class Program
         app.MapPost("/writepromptresponse", instance.WritePromptResponseDelegate);
         app.MapGet("/acquireprompt", instance.AcquirePromptDelegate);
         app.MapGet("/login", instance.LoginDelegate);
-        app.MapGet("cacheprompttype", instance.CachePromptTypeDelegate);
 
         app.Run();
     }

@@ -125,6 +125,7 @@ public class Sessions
                 HttpResponse response = context.Response;
 
                 string userid = context.Request.Headers["X-MS-CLIENT-PRINCIPAL-NAME"].FirstOrDefault();
+                string prompttype = GetParameterFromList("prompttype", request, log);
 
                 SessionData sessionData = new SessionData();
                 var cookieValue = request.Cookies["CurrentSessionData"];
@@ -137,7 +138,7 @@ public class Sessions
                 var CurrentSessionData = new 
                     { 
                         User = userid, 
-                        PromptType = sessionData.PromptType, 
+                        PromptType = prompttype, 
                         PromptName = sessionData.PromptName 
                     };
                     string sessionJson = JsonSerializer.Serialize(CurrentSessionData);
@@ -173,70 +174,6 @@ public class Sessions
 
 
                 response.StatusCode = 200;
-                    response.ContentLength = Encoding.UTF8.GetByteCount("");
-                    response.ContentType = "text/plain; charset=utf-8";
-
-                    await using (var bodyWriter = new StreamWriter(response.Body, leaveOpen: true))
-                    {
-                        await bodyWriter.WriteAsync("");
-                        await bodyWriter.FlushAsync();
-                    }
-
-                log.SetAttribute("response.contenttype", response.ContentType);
-                log.SetAttribute("response.contentlength", response.ContentLength);
-                log.SetAttribute("response.content", response.Body);
-            }
-            catch(Exception e)
-            {
-                // While you can just throw the exception back to the web server,
-                // it is not recommended. It is better to catch the exception and
-                // log it, then return a 500 Internal Server Error to the caller yourself.
-                log.HandleException(e);
-            }
-        }
-    }
-    public async Task CachePromptTypeDelegate(HttpContext context)
-    {
-        // "using" is a C# system to ensure that the object is disposed of properly
-        // when the block is exited. In this case, it will call the Dispose method
-        using(var log = _logger.StartMethod(nameof(CachePromptTypeDelegate), context))
-        {
-            try
-            {
-                HttpRequest request = context.Request;
-                HttpResponse response = context.Response;
-
-                string prompttype = GetParameterFromList("prompttype", request, log);
-
-                SessionData sessionData = new SessionData();
-                var cookieValue = request.Cookies["CurrentSessionData"];
-                if (string.IsNullOrEmpty(cookieValue))
-                {
-                    throw new UserErrorException("No Session Data Found");
-                }
-                sessionData = JsonSerializer.Deserialize<SessionData>(cookieValue);
-
-                var CurrentSessionData = new 
-                    { 
-                        User = sessionData.User, 
-                        PromptType = prompttype, 
-                        PromptName = sessionData.PromptName 
-                    };
-                    string sessionJson = JsonSerializer.Serialize(CurrentSessionData);
-
-                    //Grok knows its cookies
-                    var cookieOptions = new CookieOptions
-                    {
-                        Expires = DateTimeOffset.UtcNow.AddDays(1),   // or .AddHours(1), etc.
-                        HttpOnly = true,                              // Prevents JavaScript access (security)
-                        Secure = true,                                // Only send over HTTPS
-                        IsEssential = true,                           // For GDPR consent (if needed)
-                        SameSite = SameSiteMode.Strict                // or Lax / None
-                    };
-
-                    response.Cookies.Append("CurrentSessionData", sessionJson, cookieOptions);
-
-                    response.StatusCode = 200;
                     response.ContentLength = Encoding.UTF8.GetByteCount("");
                     response.ContentType = "text/plain; charset=utf-8";
 

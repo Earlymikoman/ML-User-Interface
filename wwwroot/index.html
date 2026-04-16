@@ -20,22 +20,22 @@
 
     <h1>Enter Text</h1>
     
-    <form id="textForm">
-        <input type="text" id="textInput" name="text" placeholder="Type your text here..." required autofocus>
+    <form id="responseForm">
+        <input type="text" id="responseInput" name="text" placeholder="Type your text here..." required autofocus>
         <br><br>
-        <button type="submit">Submit Text</button>
+        <button type="submitResponse">Submit Text</button>
     </form>
 
-    <div id="result"></div>
+    <div id="responseResult"></div>
 
     <script>
-        const form = document.getElementById('textForm');
-        const resultDiv = document.getElementById('result');
+        const responseForm = document.getElementById('responseForm');
+        const responseResultDiv = document.getElementById('responseResult');
 
-        form.addEventListener('submit', async (e) => {
+        form.addEventListener('submitResponse', async (e) => {
             e.preventDefault();
 
-            const text = document.getElementById('textInput').value.trim();
+            const text = document.getElementById('responseInput').value.trim();
             if (!text) {
                 showResult("Please type something first.", "error");
                 return;
@@ -45,7 +45,7 @@
             formData.append("text", text);
 
             try {
-                const response = await fetch('/simpletext', {
+                const response = await fetch('/acquireprompt', {
                     method: 'POST',
                     body: formData
                 });
@@ -67,5 +67,56 @@
             resultDiv.className = type;
         }
     </script>
+
+
+
+    <h1>Enter Prompt Type</h1>
+
+<form id="loginForm">
+    <input type="text" id="loginInput" name="text" placeholder="Type your text here..." required autofocus>
+    <br><br>
+    <button type="submitLogin">Submit Text</button>
+</form>
+
+<div id="result"></div>
+
+<script>
+    const loginForm = document.getElementById('loginForm');
+    const loginResultDiv = document.getElementById('result');
+
+    form.addEventListener('submitLogin', async (e) => {
+        e.preventDefault();
+
+        const text = document.getElementById('loginInput').value.trim();
+        if (!text) {
+            showResult("Please type something first.", "error");
+            return;
+        }
+
+        // Build URL with query parameter
+        const url = `/login?prompttype=${encodeURIComponent(text)}`;
+
+        try {
+            const response = await fetch(url, {
+                method: 'GET'  // Changed to GET since we're using query parameters
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                showResult(`Success! Received: "${data.text}" (${data.length} characters)`, "success");
+            } else {
+                showResult(`Error: ${data.error || 'Unknown error'}`, "error");
+            }
+        } catch (err) {
+            showResult(`Request failed: ${err.message}`, "error");
+        }
+    });
+
+    function showResult(message, type) {
+        resultDiv.innerHTML = message;
+        resultDiv.className = type;
+    }
+</script>
 </body>
 </html>
