@@ -253,6 +253,7 @@ public class Sessions
 
                 // The POST has no response body, so we just return and the system
                 // will return a 200 OK to the caller.
+                context.Response.StatusCode = 200;
             }
             catch (UserErrorException e)
             {
