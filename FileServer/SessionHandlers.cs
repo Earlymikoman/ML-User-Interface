@@ -123,20 +123,25 @@ public class Sessions
 
                 string userid = context.Request.Headers["X-MS-CLIENT-PRINCIPAL-NAME"].FirstOrDefault();
                 string prompttype = GetParameterFromList("prompttype", request, log);
+                string cachedPromptName = "";
 
-                SessionData sessionData = new SessionData();
                 var cookieValue = request.Cookies["CurrentSessionData"];
                 if (string.IsNullOrEmpty(cookieValue))
                 {
-                    throw new UserErrorException("No Session Data Found");
+                    log.SetAttribute("cookies.oldCache", "No Old Cache Found");
                 }
-                sessionData = JsonSerializer.Deserialize<SessionData>(cookieValue);
+                else
+                {
+                    SessionData sessionData = new SessionData();
+                    sessionData = JsonSerializer.Deserialize<SessionData>(cookieValue);
+                    cachedPromptName =  sessionData.PromptName;
+                }
 
                 var CurrentSessionData = new 
                     { 
                         User = userid, 
                         PromptType = prompttype, 
-                        PromptName = sessionData.PromptName 
+                        PromptName = cachedPromptName 
                     };
                     string sessionJson = JsonSerializer.Serialize(CurrentSessionData);
 
