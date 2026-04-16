@@ -65,7 +65,7 @@ sessionBtn.addEventListener('click', async () => {
         const responseForm = document.getElementById('responseForm');
         const responseResultDiv = document.getElementById('responseResult');
 
-        form.addEventListener('submitResponse', async (e) => {
+        responseForm.addEventListener('submitResponse', async (e) => {
             e.preventDefault();
 
             const text = document.getElementById('responseInput').value.trim();
@@ -96,8 +96,8 @@ sessionBtn.addEventListener('click', async () => {
         });
 
         function showResult(message, type) {
-            resultDiv.innerHTML = message;
-            resultDiv.className = type;
+            responseResultDiv.innerHTML = message;
+            responseResultDiv.className = type;
         }
     </script>
 
@@ -117,7 +117,7 @@ sessionBtn.addEventListener('click', async () => {
     const loginForm = document.getElementById('loginForm');
     const loginResultDiv = document.getElementById('result');
 
-    form.addEventListener('submitLogin', async (e) => {
+    loginForm.addEventListener('submitLogin', async (e) => {
         e.preventDefault();
 
         const text = document.getElementById('loginInput').value.trim();
@@ -147,8 +147,8 @@ sessionBtn.addEventListener('click', async () => {
     });
 
     function showResult(message, type) {
-        resultDiv.innerHTML = message;
-        resultDiv.className = type;
+        loginResultDiv.innerHTML = message;
+        loginResultDiv.className = type;
     }
 </script>
 </body>
