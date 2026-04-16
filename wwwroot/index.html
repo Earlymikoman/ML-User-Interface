@@ -16,7 +16,7 @@
     <h2>Get Session Data</h2>
 
 <button id="getSessionBtn" style="padding: 12px 24px; font-size: 16px; cursor: pointer;">
-    📋 Get Current Session
+    Get New Prompt
 </button>
 
 <div id="sessionResult" style="margin-top: 20px; padding: 15px; border: 1px solid #ddd; min-height: 60px; background: #f9f9f9; font-family: monospace; white-space: pre-wrap;"></div>
@@ -30,7 +30,7 @@ sessionBtn.addEventListener('click', async () => {
     sessionResult.style.color = '#666';
     
     try {
-        const response = await fetch('/getsessiondata', {
+        const response = await fetch('/acquireprompt', {
             method: 'GET'
         });
         
