@@ -15,7 +15,6 @@ public class Sessions
 {
     private readonly IConfiguration _configuration;
     private readonly Logger _logger;
-    private readonly CosmosDbWrapper _cosmosDbWrapper;
     private readonly IHttpClientFactory _httpClientFactory;
 
     //I'm realizing this whole class is magic; something is filling in these parameters, according to Claude.
@@ -30,7 +29,6 @@ public class Sessions
         string serviceName = configuration["Logging:ServiceName"];
         _logger = new Logger(serviceName);
 
-        _cosmosDbWrapper = new CosmosDbWrapper(configuration);
         _httpClientFactory = httpClientFactory;
     }
 
