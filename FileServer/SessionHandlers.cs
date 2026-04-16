@@ -352,6 +352,75 @@ public class Sessions
         }
     }
 
+    public async Task SkipPromptDelegate(HttpContext context)
+    {
+        using(var log = _logger.StartMethod(nameof(SkipPromptDelegate), context))
+        {
+            try
+            {
+                HttpRequest request = context.Request;
+                HttpResponse response = context.Response;
+
+                SessionData sessionData = new SessionData();
+                var cookieValue = request.Cookies["CurrentSessionData"];
+                if (string.IsNullOrEmpty(cookieValue))
+                {
+                    throw new UserErrorException("No Session Data Found");
+                }
+                sessionData = JsonSerializer.Deserialize<SessionData>(cookieValue);
+
+                string userid = sessionData.User;
+                string prompttype = sessionData.PromptType;
+
+                log.SetAttribute("cookies.userid", userid);
+                log.SetAttribute("cookies.prompttype", prompttype);
+
+                
+
+                string sessionUrl = _configuration["AzureFileServer:ConnectionStrings:SessionManagerEndpoint"] + "/skipprompt?userid=" + userid + "&prompttype=" + prompttype;
+                log.SetAttribute("request.url", sessionUrl);
+
+                var sessionClient = _httpClientFactory.CreateClient();
+                var sessionResponse = await sessionClient.GetAsync(sessionUrl);
+
+                if (!sessionResponse.IsSuccessStatusCode)
+                {
+                    throw new UserErrorException("Forwarding Skip Failed");
+                }
+
+                var CurrentSessionData = new 
+                    { 
+                        User = userid, 
+                        PromptType = prompttype, 
+                        PromptName = "" 
+                    };
+                    string sessionJson = JsonSerializer.Serialize(CurrentSessionData);
+
+                    //Grok knows its cookies
+                    var cookieOptions = new CookieOptions
+                    {
+                        Expires = DateTimeOffset.UtcNow.AddDays(1),   // or .AddHours(1), etc.
+                        HttpOnly = true,                              // Prevents JavaScript access (security)
+                        Secure = true,                                // Only send over HTTPS
+                        IsEssential = true,                           // For GDPR consent (if needed)
+                        SameSite = SameSiteMode.Strict                // or Lax / None
+                    };
+
+                    response.Cookies.Append("CurrentSessionData", sessionJson, cookieOptions);
+
+                response.StatusCode = 200;
+            }
+            catch (UserErrorException e)
+            {
+                log.LogUserError(e.Message);
+            }
+            catch(Exception e)
+            {
+                log.HandleException(e);
+            }
+        }
+    }
+
     public async Task SimpleTextInputDelegate(HttpContext context)
     {
         using (var log = _logger.StartMethod(nameof(SimpleTextInputDelegate), context))

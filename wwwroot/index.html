@@ -13,10 +13,61 @@
     </style>
 </head>
 <body>
+<h1>Enter Prompt Type</h1>
+
+<form id="loginForm">
+    <input type="text" id="loginInput" name="text" placeholder="Type your text here..." required autofocus>
+    <br><br>
+    <button type="submit">Submit Text</button>
+</form>
+
+<div id="result"></div>
+
+<script>
+    const loginForm = document.getElementById('loginForm');
+    const loginResultDiv = document.getElementById('result');
+
+    loginForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        const text = document.getElementById('loginInput').value.trim();
+        if (!text) {
+            showResult("Please type something first.", "error");
+            return;
+        }
+
+        // Build URL with query parameter
+        const url = `/login?prompttype=${encodeURIComponent(text)}`;
+
+        try {
+            const response = await fetch(url, {
+                method: 'GET'  // Changed to GET since we're using query parameters
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                showResult(`Success! Prompt Type: ` + text, "success");
+            } else {
+                showResult(`Error: ${data.error || 'Unknown error'}`, "error");
+            }
+        } catch (err) {
+            showResult(`Request failed: ${err.message}`, "error");
+        }
+    });
+
+    function showResult(message, type) {
+        loginResultDiv.innerHTML = message;
+        loginResultDiv.className = type;
+    }
+</script>
+
+
+
     <h2>Get Session Data</h2>
 
 <button id="getSessionBtn" style="padding: 12px 24px; font-size: 16px; cursor: pointer;">
-    Get New Prompt
+    Get Prompt
 </button>
 
 <div id="sessionResult" style="margin-top: 20px; padding: 15px; border: 1px solid #ddd; min-height: 60px; background: #f9f9f9; font-family: monospace; white-space: pre-wrap;"></div>
@@ -44,6 +95,63 @@ sessionBtn.addEventListener('click', async () => {
         }
     } catch (err) {
         sessionResult.textContent = `Request failed: ${err.message}`;
+        sessionResult.style.color = '#721c24';
+    }
+});
+</script>
+
+
+
+<h2>Get Session Data</h2>
+
+<button id="skipBtn" style="padding: 12px 24px; font-size: 16px; cursor: pointer;">
+    Skip Prompt
+</button>
+
+<script>
+const skipBtn = document.getElementById('skipBtn');
+//const skipsessionResult = document.getElementById('sessionResult');
+
+skipBtn.addEventListener('click', async () => {
+    // Show loading state
+    sessionResult.textContent = 'Loading...';
+    sessionResult.style.color = '#666';
+    
+    try {
+        const response = await fetch('/skipprompt', {
+            method: 'GET'
+        });
+        
+        if (response.ok) {
+            const text = await response.text();  // Plain text response
+            sessionResult.textContent = text;
+            sessionResult.style.color = '#155724';
+        } else {
+            sessionResult.textContent = `Error: ${response.status} ${response.statusText}`;
+            sessionResult.style.color = '#721c24';
+        }
+    } catch (err) {
+        sessionResult.textContent = `Skip failed: ${err.message}`;
+        sessionResult.style.color = '#721c24';
+    }
+
+
+
+    try {
+        const response = await fetch('/acquireprompt', {
+            method: 'GET'
+        });
+        
+        if (response.ok) {
+            const text = await response.text();  // Plain text response
+            sessionResult.textContent = text;
+            sessionResult.style.color = '#155724';
+        } else {
+            sessionResult.textContent = `Error: ${response.status} ${response.statusText}`;
+            sessionResult.style.color = '#721c24';
+        }
+    } catch (err) {
+        sessionResult.textContent = `Acquire failed: ${err.message}`;
         sessionResult.style.color = '#721c24';
     }
 });
@@ -103,56 +211,5 @@ sessionBtn.addEventListener('click', async () => {
             responseResultDiv.className = type;
         }
     </script>
-
-
-
-    <h1>Enter Prompt Type</h1>
-
-<form id="loginForm">
-    <input type="text" id="loginInput" name="text" placeholder="Type your text here..." required autofocus>
-    <br><br>
-    <button type="submit">Submit Text</button>
-</form>
-
-<div id="result"></div>
-
-<script>
-    const loginForm = document.getElementById('loginForm');
-    const loginResultDiv = document.getElementById('result');
-
-    loginForm.addEventListener('submit', async (e) => {
-        e.preventDefault();
-
-        const text = document.getElementById('loginInput').value.trim();
-        if (!text) {
-            showResult("Please type something first.", "error");
-            return;
-        }
-
-        // Build URL with query parameter
-        const url = `/login?prompttype=${encodeURIComponent(text)}`;
-
-        try {
-            const response = await fetch(url, {
-                method: 'GET'  // Changed to GET since we're using query parameters
-            });
-
-            const data = await response.json();
-
-            if (response.ok) {
-                showResult(`Success! Prompt Type: ` + text, "success");
-            } else {
-                showResult(`Error: ${data.error || 'Unknown error'}`, "error");
-            }
-        } catch (err) {
-            showResult(`Request failed: ${err.message}`, "error");
-        }
-    });
-
-    function showResult(message, type) {
-        loginResultDiv.innerHTML = message;
-        loginResultDiv.className = type;
-    }
-</script>
 </body>
 </html>
