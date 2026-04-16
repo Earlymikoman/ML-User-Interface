@@ -169,14 +169,14 @@ public class Sessions
                 }
 
 
-
+                string loginString = "Successfully Logged In As " + userid + "-" + prompttype;
                 response.StatusCode = 200;
-                    response.ContentLength = Encoding.UTF8.GetByteCount("");
+                    response.ContentLength = Encoding.UTF8.GetByteCount(loginString);
                     response.ContentType = "text/plain; charset=utf-8";
 
                     await using (var bodyWriter = new StreamWriter(response.Body, leaveOpen: true))
                     {
-                        await bodyWriter.WriteAsync("");
+                        await bodyWriter.WriteAsync(loginString);
                         await bodyWriter.FlushAsync();
                     }
 
