@@ -1,5 +1,4 @@
 
-using AzureFileServer.Azure;
 using AzureFileServer.Utils;
 using Microsoft.Extensions.Primitives;
 using System.Reflection.Metadata.Ecma335;
