@@ -31,7 +31,7 @@ public class Sessions
         _httpClientFactory = httpClientFactory;
     }
 
-    private static string GetParameterFromList(string parameterName, HttpRequest request, MethodLogger log)
+    private static string GetParameterFromList(string parameterName, HttpRequest request, MethodLogger log, bool ConvertToLower = true)
     {
         // Obtain the parameter from the caller
         if (request.Query.TryGetValue(parameterName, out StringValues items))
@@ -48,7 +48,14 @@ public class Sessions
             throw new UserErrorException($"No {parameterName} found");
         }
 
-        return items[0];
+        if (ConvertToLower)
+        {
+            return items[0].ToLowerInvariant();
+        }
+        else
+        {
+            return items[0];
+        }
     }
 
     public async Task DefaultDelegate(HttpContext context)
@@ -121,7 +128,7 @@ public class Sessions
                 HttpRequest request = context.Request;
                 HttpResponse response = context.Response;
 
-                string userid = context.Request.Headers["X-MS-CLIENT-PRINCIPAL-NAME"].FirstOrDefault();
+                string userid = context.Request.Headers["X-MS-CLIENT-PRINCIPAL-NAME"].FirstOrDefault().ToLowerInvariant();
                 string prompttype = GetParameterFromList("prompttype", request, log);
                 string cachedPromptName = "";
 
