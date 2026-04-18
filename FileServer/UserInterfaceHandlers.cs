@@ -6,7 +6,7 @@ using System.Text;
 using System.Net.Http.Headers;
 using System.Text.Json;
 
-namespace MLUserInterface.FileServer;
+namespace MLUserInterface.UserInterface;
 
 // This is the core logic of the web server and hosts all of the HTTP
 // handlers used by the web server regarding File Server functionality.

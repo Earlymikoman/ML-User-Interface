@@ -1,4 +1,4 @@
-namespace MLUserInterface.FileServer;
+namespace MLUserInterface.UserInterface;
 public class SessionData
 {
     public string User { get; set; }

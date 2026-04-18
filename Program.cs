@@ -14,7 +14,7 @@ using OpenTelemetry.Trace;
 
 using Telemetry.Trace;
 
-using MLUserInterface.FileServer;
+using MLUserInterface.UserInterface;
 
 namespace MLUserInterface;
 

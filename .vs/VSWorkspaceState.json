@@ -1,6 +1,15 @@
 {
   "ExpandedNodes": [
-    ""
+    "",
+    "\\UserInterface",
+    "\\obj",
+    "\\Properties",
+    "\\Telemetry",
+    "\\Telemetry\\Exporter",
+    "\\Telemetry\\Internal",
+    "\\Telemetry\\Trace",
+    "\\Utils",
+    "\\wwwroot"
   ],
   "PreviewInSolutionExplorer": false
 }
