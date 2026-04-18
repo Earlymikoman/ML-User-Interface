@@ -328,7 +328,7 @@ public class Sessions
                     { 
                         User = userid, 
                         PromptType = prompttype, 
-                        PromptName = promptData["PromptName"] 
+                        PromptName = promptData["promptname"].ToString() 
                     };
                     string sessionJson = JsonSerializer.Serialize(CurrentSessionData);
 
@@ -344,7 +344,7 @@ public class Sessions
 
                     response.Cookies.Append("CurrentSessionData", sessionJson, cookieOptions);
 
-                string returnString = promptData["PromptData"].ToString();
+                string returnString = promptData["promptdata"].ToString();
                 response.StatusCode = 200;
                 response.ContentLength = Encoding.UTF8.GetByteCount(returnString);
                 response.ContentType = "text/plain; charset=utf-8";
