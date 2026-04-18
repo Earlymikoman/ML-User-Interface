@@ -322,7 +322,7 @@ public class Sessions
                 }
 
                 var sessionContent = await sessionResponse.Content.ReadAsStringAsync();
-                var promptData = JsonSerializer.Deserialize<Dictionary<string, string>>(sessionContent);
+                var promptData = JsonSerializer.Deserialize<Dictionary<string, object>>(sessionContent);
 
                 var CurrentSessionData = new 
                     { 
