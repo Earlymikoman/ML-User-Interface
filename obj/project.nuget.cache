@@ -2,7 +2,7 @@
   "version": 2,
   "dgSpecHash": "EZIoMW/VDysX2vClOyJKVmRsoZu9/O9KsXeNTPRSapCkYolvMnnDpa9TV6MuxxlDyav7NsIXJMGMbUhHloroFg==",
   "success": true,
-  "projectFilePath": "/home/earlymikoman/ML-User-Interface/azure-file-server.csproj",
+  "projectFilePath": "/home/earlymikoman/ML-User-Interface/ml-user-interface.csproj",
   "expectedPackageFiles": [
     "/home/earlymikoman/.nuget/packages/azure.core/1.39.0/azure.core.1.39.0.nupkg.sha512",
     "/home/earlymikoman/.nuget/packages/azure.identity/1.11.4/azure.identity.1.11.4.nupkg.sha512",

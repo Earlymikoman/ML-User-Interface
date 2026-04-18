@@ -12,17 +12,17 @@ USER appuser
 FROM --platform=$BUILDPLATFORM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 ARG configuration=Release
 WORKDIR /src
-COPY ["azure-file-server.csproj", "./"]
-RUN dotnet restore "azure-file-server.csproj"
+COPY ["ml-user-interface.csproj", "./"]
+RUN dotnet restore "ml-user-interface.csproj"
 COPY . .
 WORKDIR "/src/."
-RUN dotnet build "azure-file-server.csproj" -c $configuration -o /app/build
+RUN dotnet build "ml-user-interface.csproj" -c $configuration -o /app/build
 
 FROM build AS publish
 ARG configuration=Release
-RUN dotnet publish "azure-file-server.csproj" -c $configuration -o /app/publish /p:UseAppHost=false
+RUN dotnet publish "ml-user-interface.csproj" -c $configuration -o /app/publish /p:UseAppHost=false
 
 FROM base AS final
 WORKDIR /app
 COPY --from=publish /app/publish .
-ENTRYPOINT ["dotnet", "azure-file-server.dll"]
+ENTRYPOINT ["dotnet", "ml-user-interface.dll"]

@@ -6,7 +6,7 @@
   "compilationOptions": {},
   "targets": {
     ".NETCoreApp,Version=v8.0": {
-      "azure-file-server/1.0.0": {
+      "ml-user-interface/1.0.0": {
         "dependencies": {
           "Azure.Identity": "1.11.4",
           "Azure.Storage.Blobs": "12.20.0",
@@ -19,7 +19,7 @@
           "OpenTelemetry.Instrumentation.AspNetCore": "1.8.1"
         },
         "runtime": {
-          "azure-file-server.dll": {}
+          "ml-user-interface.dll": {}
         }
       },
       "Azure.Core/1.39.0": {
@@ -508,7 +508,7 @@
     }
   },
   "libraries": {
-    "azure-file-server/1.0.0": {
+    "ml-user-interface/1.0.0": {
       "type": "project",
       "serviceable": false,
       "sha512": ""

@@ -2430,9 +2430,9 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "/home/earlymikoman/ML-User-Interface/azure-file-server.csproj",
-      "projectName": "azure-file-server",
-      "projectPath": "/home/earlymikoman/ML-User-Interface/azure-file-server.csproj",
+      "projectUniqueName": "/home/earlymikoman/ML-User-Interface/ml-user-interface.csproj",
+      "projectName": "ml-user-interface",
+      "projectPath": "/home/earlymikoman/ML-User-Interface/ml-user-interface.csproj",
       "packagesPath": "/home/earlymikoman/.nuget/packages/",
       "outputPath": "/home/earlymikoman/ML-User-Interface/obj/",
       "projectStyle": "PackageReference",
