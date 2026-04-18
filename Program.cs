@@ -66,7 +66,6 @@ class Program
 
 
         app.MapGet("/", () => Results.Redirect("/index.html")); // optional //No Grok, this is not in fact optional.
-        app.MapPost("/simpletext", instance.SimpleTextInputDelegate);
 
         //app.MapGet("/", instance.DefaultDelegate);
 
