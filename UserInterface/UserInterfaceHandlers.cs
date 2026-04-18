@@ -328,7 +328,7 @@ public class Sessions
                     { 
                         User = userid, 
                         PromptType = prompttype, 
-                        PromptName = promptData["promptname"] 
+                        PromptName = promptData["PromptName"] 
                     };
                     string sessionJson = JsonSerializer.Serialize(CurrentSessionData);
 
@@ -344,13 +344,14 @@ public class Sessions
 
                     response.Cookies.Append("CurrentSessionData", sessionJson, cookieOptions);
 
+                string returnString = promptData["PromptData"];
                 response.StatusCode = 200;
-                response.ContentLength = Encoding.UTF8.GetByteCount(promptData["promptcontent"]);
+                response.ContentLength = Encoding.UTF8.GetByteCount(returnString);
                 response.ContentType = "text/plain; charset=utf-8";
 
                 await using (var bodyWriter = new StreamWriter(response.Body, leaveOpen: true))
                 {
-                    await bodyWriter.WriteAsync(promptData["promptcontent"]);
+                    await bodyWriter.WriteAsync(returnString);
                     await bodyWriter.FlushAsync();
                 }
 
