@@ -135,7 +135,7 @@ public class Sessions
                 var cookieValue = request.Cookies["CurrentSessionData"];
                 if (string.IsNullOrEmpty(cookieValue))
                 {
-                    throw UserErrorException("No Old Cache Found");
+                    throw new UserErrorException("No Old Cache Found");
                 }
                 else
                 {
