@@ -1,6 +1,6 @@
 using OpenTelemetry.Trace;
 
-namespace AzureFileServer.Utils;
+namespace MLUserInterface.Utils;
 
 // A simple factory-patternwrapper for OpenTelemetry logging
 public class Logger

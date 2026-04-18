@@ -1,12 +1,12 @@
 
-using AzureFileServer.Utils;
+using MLUserInterface.Utils;
 using Microsoft.Extensions.Primitives;
 using System.Reflection.Metadata.Ecma335;
 using System.Text;
 using System.Net.Http.Headers;
 using System.Text.Json;
 
-namespace AzureFileServer.FileServer;
+namespace MLUserInterface.FileServer;
 
 // This is the core logic of the web server and hosts all of the HTTP
 // handlers used by the web server regarding File Server functionality.
@@ -171,7 +171,7 @@ public class Sessions
 
 
                 string sessionUrl =
-                _configuration["AzureFileServer:ConnectionStrings:SessionManagerEndpoint"] + "/login?userid=" + userid + "&prompttype=" + prompttype;
+                _configuration["MLUserInterface:ConnectionStrings:SessionManagerEndpoint"] + "/login?userid=" + userid + "&prompttype=" + prompttype;
                 log.SetAttribute("request.url", sessionUrl);
 
                 var sessionClient = _httpClientFactory.CreateClient();
@@ -241,7 +241,7 @@ public class Sessions
 
 
                 string sessionUrl =
-                _configuration["AzureFileServer:ConnectionStrings:SessionManagerEndpoint"] + "/writepromptresponse?userid=" + userid + "&prompttype=" + prompttype + "&promptname=" + promptname;
+                _configuration["MLUserInterface:ConnectionStrings:SessionManagerEndpoint"] + "/writepromptresponse?userid=" + userid + "&prompttype=" + prompttype + "&promptname=" + promptname;
                 log.SetAttribute("request.url", sessionUrl);
 
                 
@@ -310,7 +310,7 @@ public class Sessions
 
                 
 
-                string sessionUrl = _configuration["AzureFileServer:ConnectionStrings:SessionManagerEndpoint"] + "/acquireprompt?userid=" + userid + "&prompttype=" + prompttype;
+                string sessionUrl = _configuration["MLUserInterface:ConnectionStrings:SessionManagerEndpoint"] + "/acquireprompt?userid=" + userid + "&prompttype=" + prompttype;
                 log.SetAttribute("request.url", sessionUrl);
 
                 var sessionClient = _httpClientFactory.CreateClient();
@@ -395,7 +395,7 @@ public class Sessions
 
                 
 
-                string sessionUrl = _configuration["AzureFileServer:ConnectionStrings:SessionManagerEndpoint"] + "/skipprompt?userid=" + userid + "&prompttype=" + prompttype;
+                string sessionUrl = _configuration["MLUserInterface:ConnectionStrings:SessionManagerEndpoint"] + "/skipprompt?userid=" + userid + "&prompttype=" + prompttype;
                 log.SetAttribute("request.url", sessionUrl);
 
                 var sessionClient = _httpClientFactory.CreateClient();

@@ -1,4 +1,4 @@
-namespace AzureFileServer.FileServer;
+namespace MLUserInterface.FileServer;
 public class SessionData
 {
     public string User { get; set; }

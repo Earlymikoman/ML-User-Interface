@@ -14,9 +14,9 @@ using OpenTelemetry.Trace;
 
 using Telemetry.Trace;
 
-using AzureFileServer.FileServer;
+using MLUserInterface.FileServer;
 
-namespace AzureFileServer;
+namespace MLUserInterface;
 
 // This is the entry point for the application. It sets up the configuration and the services
 // that the application will use, and then starts the application running. The application is

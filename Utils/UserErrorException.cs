@@ -1,5 +1,5 @@
 
-namespace AzureFileServer.Utils;
+namespace MLUserInterface.Utils;
 
 // Simple exception class meant to detect when callers of the service do not provide
 // the correct parameters or otherwise invoke the REST method incorrectly
