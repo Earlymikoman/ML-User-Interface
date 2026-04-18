@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("ml-user-interface")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+1a378f1a6eb83b6521fa26ed908f8470898fc2a9")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+e1d6478118a2b4596d1a403502006b268f5b2546")]
 [assembly: System.Reflection.AssemblyProductAttribute("ml-user-interface")]
 [assembly: System.Reflection.AssemblyTitleAttribute("ml-user-interface")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
