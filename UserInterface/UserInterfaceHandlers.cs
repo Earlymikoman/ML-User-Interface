@@ -344,7 +344,7 @@ public class Sessions
 
                     response.Cookies.Append("CurrentSessionData", sessionJson, cookieOptions);
 
-                string returnString = promptData["PromptData"];
+                string returnString = promptData["PromptData"].ToString();
                 response.StatusCode = 200;
                 response.ContentLength = Encoding.UTF8.GetByteCount(returnString);
                 response.ContentType = "text/plain; charset=utf-8";
